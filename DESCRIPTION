@@ -1,0 +1,11 @@
+Package: sbyops
+Type: Package
+Title: Tools 
+Version: 0.0.1
+Authors@R: person("Equipe", "SBY", role = c("aut", "cre"), email = "dev@example.com")
+Description: Detects columns with low variability by modal frequency using an R interface and a Fortran native core.
+License: MIT
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+SystemRequirements: OpenMP
