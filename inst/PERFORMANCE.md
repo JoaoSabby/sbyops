@@ -11,7 +11,7 @@ Servidor informado:
 - AVX2 e AVX-512
 - 1,4 TB DDR4-2933
 
-A rotina `sby_nzv()` é predominantemente limitada por memória. Por isso,
+A rotina `sby_fe_filter_nzv()` é predominantemente limitada por memória. Por isso,
 usar 96 threads lógicas nem sempre é melhor do que usar 48 threads físicas.
 
 Configuração inicial recomendada no shell antes de abrir o R:
@@ -30,12 +30,12 @@ export NUMEXPR_NUM_THREADS=1
 Uso recomendado no R:
 
 ```r
-res <- sby_nzv(data, threshold = 0.95, n_threads = 48)
+res <- sby_fe_filter_nzv(data, threshold = 0.95, n_threads = 48)
 ```
 
 ## Por que MKL_NUM_THREADS=1?
 
-O núcleo Fortran de `sby_nzv()` não usa BLAS/MKL para a contagem modal.
+O núcleo Fortran de `sby_fe_filter_nzv()` não usa BLAS/MKL para a contagem modal.
 Se outras partes do pipeline usarem MKL ao mesmo tempo, deixar MKL também
 paralelizar pode causar oversubscription: OpenMP do pacote cria threads e MKL
 cria mais threads por cima. Isso tende a piorar desempenho e estabilidade.
@@ -48,7 +48,7 @@ Testar pelo menos:
 for (nt in c(12, 24, 36, 48, 72, 96)) {
   gc()
   cat("threads =", nt, "\n")
-  print(system.time(sby_nzv(data, threshold = 0.95, n_threads = nt)))
+  print(system.time(sby_fe_filter_nzv(data, threshold = 0.95, n_threads = nt)))
 }
 ```
 

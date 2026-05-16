@@ -3,12 +3,12 @@
 # OpenMP é usado para paralelizar a análise por colunas. As variáveis
 # SHLIB_OPENMP_* são fornecidas pelo próprio R e tornam o Makevars mais portável.
 #
-# Observação importante:
+# Observações de portabilidade:
 # - NÃO se usa -ffast-math, porque o pacote trabalha com dados estatísticos e
 #   precisa preservar comportamento seguro para NA, NaN e Inf.
-# - -march=native e -mtune=native são excelentes para instalação local no
-#   servidor de produção, mas reduzem portabilidade binária para outras CPUs.
+# - Flags específicas da CPU local, como -march=native e -mtune=native, não são
+#   usadas no pacote para preservar portabilidade binária e compatibilidade CRAN.
 
-PKG_FCFLAGS = $(SHLIB_OPENMP_FCFLAGS) -O3 -march=native -mtune=native -fPIC -pipe -ffree-line-length-none
-PKG_CFLAGS  = $(SHLIB_OPENMP_CFLAGS)  -O3 -march=native -mtune=native -fPIC -pipe
+PKG_FCFLAGS = $(SHLIB_OPENMP_FCFLAGS) -O3 -ffree-line-length-none
+PKG_CFLAGS  = $(SHLIB_OPENMP_CFLAGS)  -O3
 PKG_LIBS    = $(SHLIB_OPENMP_FCFLAGS)

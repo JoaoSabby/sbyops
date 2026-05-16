@@ -271,7 +271,6 @@ function sby_fe_filter_nzv_codes_fortran(codes_list_sexp, max_codes_sexp, thresh
   integer(c_int) :: out_i
   integer(c_int) :: n_keep
   integer(c_int) :: max_code
-  integer(c_int) :: global_max_code
   integer(c_int) :: mode_code
   integer(c_int) :: mode_count
   integer(c_int) :: n_threads
@@ -303,13 +302,6 @@ function sby_fe_filter_nzv_codes_fortran(codes_list_sexp, max_codes_sexp, thresh
 
   call c_f_pointer(INTEGER(max_codes_sexp), max_codes, [ncols])
 
-  global_max_code = 0_c_int
-  do j = 1_c_int, ncols
-    if (max_codes(j) > global_max_code) global_max_code = max_codes(j)
-  end do
-
-  if (global_max_code < 1_c_int) global_max_code = 1_c_int
-
   allocate(column_ptr(ncols))
   allocate(column_n(ncols))
   allocate(keep_flag(ncols))
@@ -338,19 +330,18 @@ function sby_fe_filter_nzv_codes_fortran(codes_list_sexp, max_codes_sexp, thresh
   ! ---------------------------------------------------------------------------
   ! Região paralela.
   ! ---------------------------------------------------------------------------
-  ! Cada thread recebe um vetor `counts` privado. Esse vetor é reutilizado pela
-  ! própria thread enquanto ela processa várias colunas. Essa estratégia evita
-  ! data races e reduz realocações repetidas.
+  ! Cada thread recebe um vetor `counts` privado. Esse vetor cresce sob demanda
+  ! até o maior `max_code` visto por aquela thread. Essa estratégia evita data
+  ! races, reduz realocações repetidas e evita alocar, em todas as threads, o
+  ! maior número de códigos observado globalmente.
   !
   ! `schedule(dynamic,1)` é usado porque colunas com muitos níveis distintos
   ! custam mais caro do que colunas com poucos níveis. O escalonamento dinâmico
   ! melhora o balanceamento de carga em bases heterogêneas.
 !$omp parallel default(none) &
-!$omp shared(ncols, column_ptr, column_n, max_codes, global_max_code, threshold, &
+!$omp shared(ncols, column_ptr, column_n, max_codes, threshold, &
 !$omp        keep_flag, mode_code_all, mode_count_all, ratio_all) &
 !$omp private(j, n, max_code, codes, counts, mode_code, mode_count, ratio)
-
-  allocate(counts(global_max_code))
 
 !$omp do schedule(dynamic,1)
   do j = 1_c_int, ncols
@@ -359,6 +350,13 @@ function sby_fe_filter_nzv_codes_fortran(codes_list_sexp, max_codes_sexp, thresh
 
     if (n > 0_c_int .and. max_code > 0_c_int) then
       call c_f_pointer(column_ptr(j), codes, [n])
+
+      if (.not. allocated(counts)) then
+        allocate(counts(max_code))
+      else if (size(counts) < max_code) then
+        deallocate(counts)
+        allocate(counts(max_code))
+      end if
 
       call column_mode_from_codes( &
         codes      = codes, &
@@ -382,7 +380,7 @@ function sby_fe_filter_nzv_codes_fortran(codes_list_sexp, max_codes_sexp, thresh
   end do
 !$omp end do
 
-  deallocate(counts)
+  if (allocated(counts)) deallocate(counts)
 
 !$omp end parallel
 

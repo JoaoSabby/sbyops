@@ -7,15 +7,15 @@
  *
  * A função Fortran foi exposta com:
  *
- *   bind(C, name = "sby_fe_filter_codes_fortran")
+ *   bind(C, name = "sby_fe_filter_nzv_codes_fortran")
  *
  * Por isso o símbolo C abaixo tem exatamente o mesmo nome, sem sufixo de
  * compilador Fortran.
  */
-extern SEXP sby_fe_filter_codes_fortran(SEXP codes_list, SEXP max_codes, SEXP threshold, SEXP n_threads);
+extern SEXP sby_fe_filter_nzv_codes_fortran(SEXP codes_list, SEXP max_codes, SEXP threshold, SEXP n_threads);
 
 static const R_CallMethodDef CallEntries[] = {
-  {"sby_fe_filter_nzv_fortran", (DL_FUNC) &sby_fe_filter_codes_fortran, 4},
+  {"sby_fe_filter_nzv_codes_fortran", (DL_FUNC) &sby_fe_filter_nzv_codes_fortran, 4},
   {NULL, NULL, 0}
 };
 
