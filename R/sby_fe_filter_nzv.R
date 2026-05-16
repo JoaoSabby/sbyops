@@ -45,7 +45,8 @@
 #'
 #' Outros tipos são recusados com erro claro, porque a comparação de igualdade
 #' pode não ser óbvia para listas, datas complexas, matrizes em coluna ou objetos
-#' personalizados.
+#' personalizados. Colunas com atributo `dim`, como matrizes em coluna, também
+#' são recusadas mesmo quando seu armazenamento interno é numérico.
 #'
 #' ## Arquitetura R + Fortran
 #'
@@ -63,10 +64,12 @@
 #' @param threshold Número escalar entre 0 e 1. Representa a frequência relativa
 #'   mínima do valor modal para a coluna entrar no filtro.
 #' @param n_threads Inteiro escalar opcional. Número de threads OpenMP usadas
-#'   pelo núcleo Fortran. Quando `NULL`, a rotina não altera a configuração
-#'   global do OpenMP e usa o padrão definido pelo ambiente, por exemplo
-#'   `OMP_NUM_THREADS`. Para máximo desempenho seguro em servidores grandes,
-#'   recomenda-se testar valores próximos ao número de núcleos físicos.
+#'   pelo núcleo Fortran. Quando `NULL`, a rotina usa o padrão definido pelo
+#'   ambiente, por exemplo `OMP_NUM_THREADS`. Quando informado, o valor é
+#'   enviado a `omp_set_num_threads()` para esta chamada nativa; o runtime
+#'   OpenMP pode manter essa configuração para chamadas seguintes no mesmo
+#'   processo. Para máximo desempenho seguro em servidores grandes, recomenda-se
+#'   testar valores próximos ao número de núcleos físicos.
 #'
 #' @return
 #' Um objeto da classe `sby_fe_filter_nzv_result`, baseado em `tibble` quando o pacote
@@ -82,8 +85,8 @@
 #'
 #' O número de linhas e de colunas da tabela analisada não é repetido em cada
 #' linha do resultado. Esses valores ficam guardados em atributos do objeto:
-#' `n_rows`, `n_cols` e `threshold`. O método de impressão mostra esses
-#' metadados antes da tabela.
+#' `n_rows`, `n_cols`, `threshold` e `n_threads`. O método de impressão mostra
+#' esses metadados antes da tabela.
 #'
 #' Quando `data` não possui linhas ou colunas, a função emite mensagem e retorna
 #' uma tabela vazia com a mesma estrutura de saída e com os metadados preenchidos.
@@ -99,8 +102,8 @@
 #'
 #' sby_fe_filter_nzv(df, threshold = 0.8)
 #'
-#' # Em servidor com muitos núcleos:
-#' sby_fe_filter_nzv(df, threshold = 0.95, n_threads = 48)
+#' # Controle explícito de threads OpenMP:
+#' sby_fe_filter_nzv(df, threshold = 0.95, n_threads = 1)
 #'
 #' @export
 sby_fe_filter_nzv <- function(data, threshold, n_threads = NULL) {
@@ -147,12 +150,12 @@ sby_fe_filter_nzv <- function(data, threshold, n_threads = NULL) {
       stop("`n_threads` deve ser NULL ou um número inteiro positivo.", call. = FALSE)
     }
 
-    if (n_threads < 1 || n_threads != as.integer(n_threads)) {
-      stop("`n_threads` deve ser NULL ou um número inteiro positivo.", call. = FALSE)
-    }
-
     if (n_threads > .Machine$integer.max) {
       stop("`n_threads` é grande demais para ser enviado ao código nativo.", call. = FALSE)
+    }
+
+    if (n_threads < 1 || n_threads != floor(n_threads)) {
+      stop("`n_threads` deve ser NULL ou um número inteiro positivo.", call. = FALSE)
     }
 
     n_threads_native <- as.integer(n_threads)
@@ -179,8 +182,10 @@ sby_fe_filter_nzv <- function(data, threshold, n_threads = NULL) {
   ok <- vapply(
     data,
     function(x) {
-      is.factor(x) || is.character(x) || is.integer(x) ||
-        is.logical(x) || is.numeric(x)
+      is.null(dim(x)) && (
+        is.factor(x) || is.character(x) || is.integer(x) ||
+          is.logical(x) || is.numeric(x)
+      )
     },
     logical(1)
   )
@@ -226,7 +231,8 @@ sby_fe_filter_nzv <- function(data, threshold, n_threads = NULL) {
     codes,
     as.integer(max_codes),
     as.numeric(threshold),
-    n_threads_native
+    n_threads_native,
+    PACKAGE = "sbyops"
   )
 
   names(native) <- c("column_index", "ratio", "code", "count")

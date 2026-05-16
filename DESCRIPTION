@@ -1,11 +1,20 @@
 Package: sbyops
 Type: Package
-Title: Tools 
+Title: Modal-Frequency Near-Zero-Variance Filter
 Version: 0.0.1
-Authors@R: person("Equipe", "SBY", role = c("aut", "cre"), email = "dev@example.com")
-Description: Detects columns with low variability by modal frequency using an R interface and a Fortran native core.
-License: MIT
+Authors@R: person("Joao B. G.", "de Brito", role = c("aut", "cre"),
+    email = "JoaoSabby@users.noreply.github.com")
+Description: Detects columns with low variability by modal frequency using an R
+    interface and a Fortran native core. Columns are flagged when the most common
+    value reaches a user-defined frequency threshold.
+License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 SystemRequirements: OpenMP
+URL: https://github.com/JoaoSabby/sbyops
+BugReports: https://github.com/JoaoSabby/sbyops/issues
+Suggests:
+    testthat (>= 3.0.0),
+    tibble
+Config/testthat/edition: 3
