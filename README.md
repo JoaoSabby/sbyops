@@ -1,120 +1,51 @@
 # sbyops
 
-`sbyops` é um pacote R para identificar colunas com baixa variabilidade por
-frequência modal. A interface pública valida e codifica colunas no R, enquanto o
-núcleo nativo em Fortran calcula, por coluna, o valor mais frequente, sua
-contagem absoluta e sua frequência relativa.
+`sbyops` provides fast, pipe-friendly column selection operations for tabular preprocessing in R.
 
-## Instalação
+The current public API is intentionally small:
 
 ```r
-# A partir da raiz do repositório local
-install.packages(".", repos = NULL, type = "source")
+preprocessed <- data |>
+  sby_select_modal_frequency(threshold = 0.95) |>
+  sby_select_correlation(threshold = 0.95)
 ```
 
-O pacote usa OpenMP no núcleo Fortran. Em sistemas sem OpenMP disponível, a
-compilação deve ser validada com a toolchain R local.
+## Modal frequency selection
 
-## Exemplo rápido
+`sby_select_modal_frequency()` removes selected columns whose most frequent value appears in a proportion greater than or equal to `threshold`.
 
 ```r
-library(sbyops)
-
 df <- data.frame(
-  constante = c(1, 1, 1, 1, 1),
-  quase_constante = c("x", "x", "x", "x", "y"),
-  variavel = c(1, 2, 3, 4, 5),
-  ausente_modal = c(NA, NA, NA, NA, 10)
+  constant = c(1, 1, 1, 1, 1),
+  near_constant = c("x", "x", "x", "x", "y"),
+  variable = c(1, 2, 3, 4, 5)
 )
 
-sby_fe_filter_nzv(df, threshold = 0.8)
+sby_select_modal_frequency(df, threshold = 0.8)
 ```
 
-A função retorna uma linha para cada coluna cujo conteúdo modal aparece em
-proporção maior ou igual ao `threshold`.
+When no selectors are supplied, all supported columns are evaluated. When selectors are supplied, only those columns are evaluated and all other columns are kept.
 
-## Critério estatístico
+## Correlation selection
 
-Para cada coluna, o pacote calcula:
-
-```text
-ratio = frequência do valor mais comum / número de linhas
-```
-
-A coluna é retornada quando:
-
-```text
-ratio >= threshold
-```
-
-Consequências práticas:
-
-- `threshold = 1` retorna apenas colunas completamente constantes.
-- `threshold = 0.95` retorna colunas em que algum conteúdo representa pelo menos
-  95% das linhas.
-- `threshold = 0` retorna toda coluna não vazia.
-
-## Tipos suportados
-
-As colunas devem ser dos tipos:
-
-- `factor`
-- `character`
-- `integer`
-- `logical`
-- `numeric`
-
-Outros tipos, como `Date`, `POSIXct`, listas e colunas matriciais, são recusados
-para evitar semântica ambígua de comparação.
-
-## Tratamento de valores ausentes
-
-`NA` é tratado como conteúdo. Portanto, uma coluna com 95% de `NA` possui `NA`
-como valor modal e será retornada quando `threshold <= 0.95`.
-
-## Valores numéricos
-
-Colunas `numeric` são comparadas por igualdade exata após codificação por
-`factor()`. Valores numericamente próximos, mas não idênticos, não são agrupados.
-Se for necessário agrupar por tolerância, arredonde ou transforme os dados antes
-de chamar `sby_fe_filter_nzv()`.
-
-## Paralelismo
-
-Use `n_threads` para solicitar um número de threads OpenMP:
+`sby_select_correlation()` removes highly correlated numeric columns using absolute Pearson correlation.
 
 ```r
-sby_fe_filter_nzv(df, threshold = 0.95, n_threads = 4)
+df <- data.frame(
+  x1 = 1:6,
+  x2 = 2 * (1:6),
+  x3 = c(6, 1, 5, 2, 4, 3),
+  group = letters[1:6]
+)
+
+sby_select_correlation(df, threshold = 0.99)
 ```
 
-Quando `n_threads = NULL`, o runtime OpenMP usa a configuração do ambiente, como
-`OMP_NUM_THREADS`. Quando `n_threads` é informado, o núcleo nativo chama
-`omp_set_num_threads()`; dependendo do runtime OpenMP, essa configuração pode
-persistir para chamadas seguintes no mesmo processo R.
+When no selectors are supplied, all numeric columns are evaluated. Non-numeric columns are kept.
 
-Em servidores compartilhados, evite oversubscription combinando muitas threads do
-pacote com BLAS/MKL também paralelos. Uma configuração comum é limitar BLAS/MKL a
-uma thread durante benchmarks do filtro.
+## Native cores
 
-## Objeto retornado
+The heavy work is performed by Fortran/OpenMP native cores:
 
-O retorno é um objeto `sby_fe_filter_nzv_result`, baseado em `tibble` quando o
-pacote `tibble` estiver instalado, ou em `data.frame` base caso contrário. A
-tabela possui as colunas:
-
-- `column`: nome da coluna filtrada;
-- `ratio`: frequência relativa do valor modal;
-- `value`: valor modal como representação textual;
-- `count`: frequência absoluta do valor modal.
-
-Os atributos `n_rows`, `n_cols`, `threshold` e `n_threads` armazenam metadados da
-análise.
-
-## Limitações
-
-- O filtro mede dominância modal, não variância estatística clássica.
-- Não usa os critérios adicionais de alguns filtros near-zero variance, como
-  razão entre a primeira e a segunda frequência mais comum.
-- Não há suporte especializado a matrizes esparsas.
-- O desempenho depende da cardinalidade das colunas, do número de colunas e da
-  configuração OpenMP.
+- modal-frequency counting uses encoded integer columns;
+- Pearson correlation uses a native double-matrix kernel and handles non-finite values pairwise.
