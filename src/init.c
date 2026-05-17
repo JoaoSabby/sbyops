@@ -2,20 +2,12 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
-/*
- * Registro das rotinas nativas.
- *
- * A função Fortran foi exposta com:
- *
- *   bind(C, name = "sby_fe_filter_nzv_codes_fortran")
- *
- * Por isso o símbolo C abaixo tem exatamente o mesmo nome, sem sufixo de
- * compilador Fortran.
- */
-extern SEXP sby_fe_filter_nzv_codes_fortran(SEXP codes_list, SEXP max_codes, SEXP threshold, SEXP n_threads);
+extern SEXP sby_modal_frequency_codes_fortran(SEXP codes_list, SEXP max_codes);
+extern SEXP sby_correlation_pearson_matrix_fortran(SEXP matrix, SEXP n_rows, SEXP n_cols);
 
 static const R_CallMethodDef CallEntries[] = {
-  {"sby_fe_filter_nzv_codes_fortran", (DL_FUNC) &sby_fe_filter_nzv_codes_fortran, 4},
+  {"sby_modal_frequency_codes_fortran", (DL_FUNC) &sby_modal_frequency_codes_fortran, 2},
+  {"sby_correlation_pearson_matrix_fortran", (DL_FUNC) &sby_correlation_pearson_matrix_fortran, 3},
   {NULL, NULL, 0}
 };
 

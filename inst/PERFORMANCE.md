@@ -1,57 +1,31 @@
-# Desempenho e OpenMP em servidor NUMA
+# Performance notes
 
-## Configuração recomendada inicial
+`sbyops` uses native Fortran/OpenMP cores for the heavy parts of the current column selection operations.
 
-Servidor informado:
+## Recommended environment variables
 
-- 2 sockets NUMA
-- 48 núcleos físicos
-- 96 CPUs lógicas via Hyper-Threading
-- Intel Xeon Platinum 8260
-- AVX2 e AVX-512
-- 1,4 TB DDR4-2933
-
-A rotina `sby_fe_filter_nzv()` é predominantemente limitada por memória. Por isso,
-usar 96 threads lógicas nem sempre é melhor do que usar 48 threads físicas.
-
-Configuração inicial recomendada no shell antes de abrir o R:
+For large workloads, it can be useful to configure OpenMP before starting R:
 
 ```bash
 export OMP_PROC_BIND=spread
 export OMP_PLACES=cores
 export OMP_DYNAMIC=false
+```
 
+If other numerical libraries are used in the same R session, avoid oversubscription by limiting their own thread pools when appropriate:
+
+```bash
 export MKL_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export BLIS_NUM_THREADS=1
-export NUMEXPR_NUM_THREADS=1
 ```
 
-Uso recomendado no R:
+## Modal frequency
 
-```r
-res <- sby_fe_filter_nzv(data, threshold = 0.95, n_threads = 48)
-```
+`sby_select_modal_frequency()` converts supported columns to compact integer codes in R and counts modal frequencies in Fortran. The native loop is parallelized by column.
 
-## Por que MKL_NUM_THREADS=1?
+## Correlation
 
-O núcleo Fortran de `sby_fe_filter_nzv()` não usa BLAS/MKL para a contagem modal.
-Se outras partes do pipeline usarem MKL ao mesmo tempo, deixar MKL também
-paralelizar pode causar oversubscription: OpenMP do pacote cria threads e MKL
-cria mais threads por cima. Isso tende a piorar desempenho e estabilidade.
+`sby_select_correlation()` computes absolute Pearson correlations in Fortran. The first implementation uses a dense correlation matrix and includes an internal safety check before allocation. If too many selected columns would require an unsafe matrix allocation, the function stops before exhausting memory.
 
-## Como testar
-
-Testar pelo menos:
-
-```r
-for (nt in c(12, 24, 36, 48, 72, 96)) {
-  gc()
-  cat("threads =", nt, "\n")
-  print(system.time(sby_fe_filter_nzv(data, threshold = 0.95, n_threads = nt)))
-}
-```
-
-Em muitos casos, o melhor ponto ficará entre 24 e 48 threads. Em bases muito
-largas, 48 pode ser o melhor. Em bases pequenas ou estreitas, valores menores
-podem ganhar por reduzir overhead.
+A future implementation should add a streaming/block correlation engine for very wide data.

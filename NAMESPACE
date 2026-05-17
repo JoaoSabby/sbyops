@@ -1,3 +1,6 @@
 useDynLib(sbyops, .registration = TRUE)
-export(sby_fe_filter_nzv)
-S3method(print,sby_fe_filter_nzv_result)
+importFrom(rlang,enquos)
+importFrom(rlang,expr)
+importFrom(tidyselect,eval_select)
+export(sby_select_modal_frequency)
+export(sby_select_correlation)

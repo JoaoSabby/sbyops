@@ -1,12 +1,13 @@
 Package: sbyops
 Type: Package
-Title: Modal-Frequency Near-Zero-Variance Filter
+Title: Fast Tabular Column Selection Operations
 Version: 0.0.1
 Authors@R: person("Joao B. G.", "de Brito", role = c("aut", "cre"),
     email = "JoaoSabby@users.noreply.github.com")
-Description: Detects columns with low variability by modal frequency using an R
-    interface and a Fortran native core. Columns are flagged when the most common
-    value reaches a user-defined frequency threshold.
+Description: Provides fast, pipe-friendly column selection operations for
+    tabular preprocessing. The initial operations remove columns by modal
+    frequency and Pearson correlation using an R interface and native Fortran
+    cores for performance-oriented workloads.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -14,6 +15,9 @@ RoxygenNote: 7.3.2
 SystemRequirements: OpenMP
 URL: https://github.com/JoaoSabby/sbyops
 BugReports: https://github.com/JoaoSabby/sbyops/issues
+Imports:
+    rlang,
+    tidyselect
 Suggests:
     testthat (>= 3.0.0),
     tibble

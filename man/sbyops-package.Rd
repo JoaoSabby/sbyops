@@ -1,13 +1,9 @@
-% Generated manually until roxygen2 is run.
-\name{sbyops-package}
-\alias{sbyops-package}
-\alias{sbyops}
+% Generated manually for the development snapshot.
 \docType{package}
-\title{Modal Frequency Near-Zero Variance Filter}
+\name{sbyops-package}
+\alias{sbyops}
+\alias{sbyops-package}
+\title{sbyops: Fast Tabular Column Selection Operations}
 \description{
-Tools to detect columns with low variability by modal frequency using an R
-interface and a Fortran native core with optional OpenMP parallelism.
-}
-\details{
-The main public function is \code{\link{sby_fe_filter_nzv}}.
+Fast, pipe-friendly column selection operations for tabular preprocessing.
 }
