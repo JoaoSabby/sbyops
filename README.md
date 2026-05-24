@@ -1,48 +1,54 @@
 # sbyops
 
-`sbyops` implementa operações de seleção de colunas para pré-processamento tabular em R, com núcleos nativos em Fortran e OpenMP.
+`sbyops` é um pacote de tools para operações tabulares de alto desempenho em R.
 
 ## API pública
-
-As funções públicas atuais são:
 
 - `sby_select_modal_frequency()`
 - `sby_select_correlation()`
 
-Exemplo básico:
+A API não expõe backend, `finite_mode`, `block_rows` ou `column_names`: essas decisões são internas.
 
-```r
-preprocessed <- data |>
-  sby_select_modal_frequency(threshold = 0.95) |>
-  sby_select_correlation(threshold = 0.95)
-```
+## Entradas suportadas
+
+- `data.frame`
+- `tibble`
+- `matrix`
+
+### Nomes de colunas
+
+- Se existirem, são preservados.
+- Em `matrix` sem `colnames`, nomes determinísticos são gerados internamente.
+- Nomes vazios/duplicados são reparados internamente de forma determinística.
 
 ## Seleção por frequência modal
 
-` sby_select_modal_frequency()` remove colunas selecionadas cuja frequência modal é maior ou igual a `threshold`.
+` sby_select_modal_frequency()` remove colunas com frequência modal `>= threshold` (limite inclusivo).
 
-- `threshold` é inclusivo.
-- Sem seletores, todas as colunas suportadas são avaliadas.
-- Com seletores, apenas colunas selecionadas são avaliadas e as demais são preservadas.
-
-Tipos suportados para avaliação modal: fator, caractere, inteiro, lógico e numérico.
+- Suporte de avaliação: factor, character, integer, logical, numeric.
+- Colunas não avaliáveis permanecem no resultado.
 
 ## Seleção por correlação de Pearson
 
-` sby_select_correlation()` remove colunas numéricas altamente correlacionadas usando correlação de Pearson em valor absoluto.
+` sby_select_correlation()` remove colunas numéricas com correlação absoluta `>= threshold` (limite inclusivo).
 
-- `threshold` é inclusivo.
-- Sem seletores, todas as colunas numéricas são avaliadas.
-- Colunas não numéricas são preservadas.
-- A correlação usa tratamento pairwise quando há `NA`, `NaN` ou `Inf`.
+- Correlação absoluta (`abs`).
+- Com `NA`, `NaN` ou `Inf`, usa caminho robusto pairwise.
+- Colunas constantes recebem correlação efetiva zero no motor atual.
+- Em pares altamente correlacionados, remove a coluna com maior correlação média absoluta com o conjunto ativo.
+- A ordem das colunas pode influenciar desempates por varredura.
+
+## Estratégia automática interna
+
+A função escolhe internamente entre:
+
+- caminho simples robusto em Fortran/OpenMP,
+- caminho BLAS para dados finitos e memória suficiente,
+- caminho streaming para reduzir cópias em matrizes altas.
+
+Sem necessidade de usuário escolher backend.
 
 ## OpenMP
-
-Os núcleos nativos usam OpenMP com controle por variáveis de ambiente. O pacote não fixa número de threads no código.
-
-### Controle de threads
-
-Exemplo em Linux:
 
 ```bash
 export OMP_NUM_THREADS=8
@@ -51,39 +57,14 @@ export OMP_PROC_BIND=spread
 export OMP_PLACES=cores
 ```
 
-Exemplo em R:
+OpenMP pode piorar desempenho em bases pequenas por overhead.
 
-```r
-Sys.setenv(
-  OMP_NUM_THREADS = "8",
-  OMP_DYNAMIC = "FALSE",
-  OMP_PROC_BIND = "spread",
-  OMP_PLACES = "cores"
-)
-```
+## MKL, TBB e SYCL
 
-### Oversubscription
+- MKL **pode** acelerar caminho BLAS apenas quando o R estiver linkado a MKL.
+- MKL não é dependência direta do pacote.
+- TBB e SYCL não são usados na implementação atual.
 
-Quando houver paralelismo externo (`future`, `parallel`, `foreach`, `mirai`, `targets`), recomenda-se reduzir `OMP_NUM_THREADS` para evitar oversubscription.
+## Benchmark local
 
-### Quando OpenMP pode piorar desempenho
-
-Em bases pequenas, o custo de criação/sincronização de threads pode superar o ganho de paralelismo.
-
-## Núcleos nativos
-
-- Frequência modal: processamento por coluna com códigos inteiros.
-- Correlação de Pearson: matriz densa por pares de colunas, com tratamento de não finitos.
-
-## Ferramentas opcionais de diagnóstico
-
-VTune e Advisor são opcionais para desenvolvimento, não dependências do pacote.
-
-```bash
-vtune -collect hotspots -- Rscript benchmark_sbyops.R
-vtune -collect threading -- Rscript benchmark_sbyops.R
-vtune -collect memory-access -- Rscript benchmark_sbyops.R
-
-advisor --collect=survey --project-dir=advisor_sbyops -- Rscript benchmark_sbyops.R
-advisor --collect=roofline --project-dir=advisor_sbyops_roofline -- Rscript benchmark_sbyops.R
-```
+Script: `inst/benchmarks/benchmark_correlation.R`.
