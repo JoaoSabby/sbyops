@@ -1,31 +1,59 @@
-# Performance notes
+# Desempenho técnico do sbyops
 
-`sbyops` uses native Fortran/OpenMP cores for the heavy parts of the current column selection operations.
+## Arquitetura adaptativa
 
-## Recommended environment variables
+A seleção por correlação usa estratégia interna automática, sem parâmetros públicos de backend:
 
-For large workloads, it can be useful to configure OpenMP before starting R:
+- **fortran**: caminho robusto para dados com `NA`, `NaN` ou `Inf`.
+- **blas**: caminho para dados finitos com memória temporária considerada segura.
+- **streaming**: caminho para matrizes altas com restrição de memória, reduzindo cópias grandes.
+
+A decisão é baseada em perfil interno (`n_rows`, `n_cols`, pares, finitude e estimativa de memória).
+
+## Caso de produção 4.000.000 x 250
+
+- Matriz principal double aproximada: `~7,45 GiB`.
+- Matriz de correlação final: pequena (`250 x 250`).
+- Risco principal: cópias temporárias.
+- Recomendação: evitar objetos duplicados no ambiente e executar benchmark fora do CI.
+
+## OpenMP
+
+Os núcleos nativos em Fortran utilizam OpenMP internamente.
+
+Exemplo:
 
 ```bash
+export OMP_NUM_THREADS=8
+export OMP_DYNAMIC=FALSE
 export OMP_PROC_BIND=spread
 export OMP_PLACES=cores
-export OMP_DYNAMIC=false
 ```
 
-If other numerical libraries are used in the same R session, avoid oversubscription by limiting their own thread pools when appropriate:
+Em paralelismo externo (por processo), reduzir `OMP_NUM_THREADS` para evitar oversubscription.
 
-```bash
-export MKL_NUM_THREADS=1
-export OPENBLAS_NUM_THREADS=1
-export BLIS_NUM_THREADS=1
-```
+## Benchmark
 
-## Modal frequency
+Script: `inst/benchmarks/benchmark_correlation.R`
 
-`sby_select_modal_frequency()` converts supported columns to compact integer codes in R and counts modal frequencies in Fortran. The native loop is parallelized by column.
+Cenários leves/médios no script:
 
-## Correlation
+- 10.000 x 250
+- 250.000 x 250
+- 50.000 x 1.000
 
-`sby_select_correlation()` computes absolute Pearson correlations in Fortran. The first implementation uses a dense correlation matrix and includes an internal safety check before allocation. If too many selected columns would require an unsafe matrix allocation, the function stops before exhausting memory.
+Cenários pesados (manual/local):
 
-A future implementation should add a streaming/block correlation engine for very wide data.
+- 1.000.000 x 250
+- 4.000.000 x 250
+
+O benchmark não integra `R CMD check`.
+
+## Ferramentas opcionais
+
+VTune e Advisor podem ser usados em desenvolvimento para hotspot, threading e memória.
+
+## Limites conhecidos
+
+- O caminho BLAS e streaming atuais exigem dados finitos.
+- A heurística de memória é conservadora e ajustável por opções internas.
