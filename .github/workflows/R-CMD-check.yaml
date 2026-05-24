@@ -40,7 +40,8 @@ jobs:
 
       - name: Install R package dependencies
         run: |
-          R -q -e 'install.packages(c("rcmdcheck", "rlang", "tidyselect", "testthat", "tibble"), repos = "https://cloud.r-project.org")'
+          R -q -e 'install.packages(c("rcmdcheck", "remotes"), repos = "https://cloud.r-project.org")'
+          R -q -e 'remotes::install_deps(dependencies = TRUE, repos = "https://cloud.r-project.org")'
 
       - name: Run R CMD check
         env:
