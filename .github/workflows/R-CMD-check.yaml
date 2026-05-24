@@ -43,5 +43,7 @@ jobs:
           R -q -e 'install.packages(c("rcmdcheck", "rlang", "tidyselect", "testthat", "tibble"), repos = "https://cloud.r-project.org")'
 
       - name: Run R CMD check
+        env:
+          _R_CHECK_FORCE_SUGGESTS_: false
         run: |
           R -q -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"), error_on = "warning")'
