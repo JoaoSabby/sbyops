@@ -1,8 +1,15 @@
 # sbyops
 
-`sbyops` provides fast, pipe-friendly column selection operations for tabular preprocessing in R.
+`sbyops` implementa operações de seleção de colunas para pré-processamento tabular em R, com núcleos nativos em Fortran e OpenMP.
 
-The current public API is intentionally small:
+## API pública
+
+As funções públicas atuais são:
+
+- `sby_select_modal_frequency()`
+- `sby_select_correlation()`
+
+Exemplo básico:
 
 ```r
 preprocessed <- data |>
@@ -10,42 +17,73 @@ preprocessed <- data |>
   sby_select_correlation(threshold = 0.95)
 ```
 
-## Modal frequency selection
+## Seleção por frequência modal
 
-`sby_select_modal_frequency()` removes selected columns whose most frequent value appears in a proportion greater than or equal to `threshold`.
+` sby_select_modal_frequency()` remove colunas selecionadas cuja frequência modal é maior ou igual a `threshold`.
 
-```r
-df <- data.frame(
-  constant = c(1, 1, 1, 1, 1),
-  near_constant = c("x", "x", "x", "x", "y"),
-  variable = c(1, 2, 3, 4, 5)
-)
+- `threshold` é inclusivo.
+- Sem seletores, todas as colunas suportadas são avaliadas.
+- Com seletores, apenas colunas selecionadas são avaliadas e as demais são preservadas.
 
-sby_select_modal_frequency(df, threshold = 0.8)
+Tipos suportados para avaliação modal: fator, caractere, inteiro, lógico e numérico.
+
+## Seleção por correlação de Pearson
+
+` sby_select_correlation()` remove colunas numéricas altamente correlacionadas usando correlação de Pearson em valor absoluto.
+
+- `threshold` é inclusivo.
+- Sem seletores, todas as colunas numéricas são avaliadas.
+- Colunas não numéricas são preservadas.
+- A correlação usa tratamento pairwise quando há `NA`, `NaN` ou `Inf`.
+
+## OpenMP
+
+Os núcleos nativos usam OpenMP com controle por variáveis de ambiente. O pacote não fixa número de threads no código.
+
+### Controle de threads
+
+Exemplo em Linux:
+
+```bash
+export OMP_NUM_THREADS=8
+export OMP_DYNAMIC=FALSE
+export OMP_PROC_BIND=spread
+export OMP_PLACES=cores
 ```
 
-When no selectors are supplied, all supported columns are evaluated. When selectors are supplied, only those columns are evaluated and all other columns are kept.
-
-## Correlation selection
-
-`sby_select_correlation()` removes highly correlated numeric columns using absolute Pearson correlation.
+Exemplo em R:
 
 ```r
-df <- data.frame(
-  x1 = 1:6,
-  x2 = 2 * (1:6),
-  x3 = c(6, 1, 5, 2, 4, 3),
-  group = letters[1:6]
+Sys.setenv(
+  OMP_NUM_THREADS = "8",
+  OMP_DYNAMIC = "FALSE",
+  OMP_PROC_BIND = "spread",
+  OMP_PLACES = "cores"
 )
-
-sby_select_correlation(df, threshold = 0.99)
 ```
 
-When no selectors are supplied, all numeric columns are evaluated. Non-numeric columns are kept.
+### Oversubscription
 
-## Native cores
+Quando houver paralelismo externo (`future`, `parallel`, `foreach`, `mirai`, `targets`), recomenda-se reduzir `OMP_NUM_THREADS` para evitar oversubscription.
 
-The heavy work is performed by Fortran/OpenMP native cores:
+### Quando OpenMP pode piorar desempenho
 
-- modal-frequency counting uses encoded integer columns;
-- Pearson correlation uses a native double-matrix kernel and handles non-finite values pairwise.
+Em bases pequenas, o custo de criação/sincronização de threads pode superar o ganho de paralelismo.
+
+## Núcleos nativos
+
+- Frequência modal: processamento por coluna com códigos inteiros.
+- Correlação de Pearson: matriz densa por pares de colunas, com tratamento de não finitos.
+
+## Ferramentas opcionais de diagnóstico
+
+VTune e Advisor são opcionais para desenvolvimento, não dependências do pacote.
+
+```bash
+vtune -collect hotspots -- Rscript benchmark_sbyops.R
+vtune -collect threading -- Rscript benchmark_sbyops.R
+vtune -collect memory-access -- Rscript benchmark_sbyops.R
+
+advisor --collect=survey --project-dir=advisor_sbyops -- Rscript benchmark_sbyops.R
+advisor --collect=roofline --project-dir=advisor_sbyops_roofline -- Rscript benchmark_sbyops.R
+```

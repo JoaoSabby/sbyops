@@ -50,3 +50,26 @@ test_that("sby_select_correlation handles missing values pairwise", {
   expect_equal(length(intersect(names(out), c("x1", "x2"))), 1L)
   expect_true("x3" %in% names(out))
 })
+
+test_that("sby_select_correlation is stable across OpenMP thread counts", {
+  old_threads <- Sys.getenv("OMP_NUM_THREADS", unset = NA_character_)
+  on.exit({
+    if (is.na(old_threads)) Sys.unsetenv("OMP_NUM_THREADS") else Sys.setenv(OMP_NUM_THREADS = old_threads)
+  }, add = TRUE)
+
+  set.seed(123)
+  df <- data.frame(
+    x1 = rnorm(500),
+    x2 = rnorm(500),
+    x3 = rnorm(500),
+    x4 = rnorm(500)
+  )
+  df$x2 <- df$x1 * 0.98 + df$x2 * 0.02
+
+  Sys.setenv(OMP_NUM_THREADS = "1")
+  out_1 <- sby_select_correlation(df, threshold = 0.95)
+  Sys.setenv(OMP_NUM_THREADS = "2")
+  out_2 <- sby_select_correlation(df, threshold = 0.95)
+
+  expect_identical(out_1, out_2)
+})
