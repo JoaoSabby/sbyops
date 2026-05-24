@@ -39,3 +39,43 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
+
+  R-CMD-check-oracle-linux-9:
+    runs-on: ubuntu-latest
+    name: oraclelinux-9 (R 4.5.3)
+    container:
+      image: oraclelinux:9
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          dnf -y update
+          dnf -y install \
+            git tar gzip xz make gcc gcc-c++ gcc-gfortran \
+            pcre2-devel readline-devel zlib-devel bzip2 bzip2-devel \
+            xz-devel libcurl-devel openssl-devel libjpeg-turbo-devel \
+            libpng-devel libtiff-devel cairo-devel pango-devel \
+            libicu-devel which findutils diffutils
+
+      - name: Build and install R 4.5.3
+        run: |
+          cd /tmp
+          curl -LO https://cran.r-project.org/src/base/R-4/R-4.5.3.tar.gz
+          tar -xf R-4.5.3.tar.gz
+          cd R-4.5.3
+          ./configure --prefix=/opt/R/4.5.3 --enable-R-shlib --with-x=no
+          make -j"$(nproc)"
+          make install
+          ln -s /opt/R/4.5.3/bin/R /usr/local/bin/R
+          ln -s /opt/R/4.5.3/bin/Rscript /usr/local/bin/Rscript
+          R --version
+
+      - name: Install R package dependencies
+        run: |
+          R -q -e 'install.packages(c("rcmdcheck", "testthat", "tibble"), repos = "https://cloud.r-project.org")'
+
+      - name: Run R CMD check
+        run: |
+          R -q -e 'rcmdcheck::rcmdcheck(args = c("--no-manual", "--as-cran"), error_on = "warning")'

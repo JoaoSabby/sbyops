@@ -12,7 +12,7 @@ test_that("sby_select_modal_frequency supports matrix", {
   m <- cbind(a = c(1, 1, 1, 1), b = c(1, 2, 3, 4))
   out <- sby_select_modal_frequency(m, threshold = 0.75)
   expect_true(is.matrix(out))
-  expect_named(out, "b")
+  expect_identical(colnames(out), "b")
 })
 
 test_that("sby_select_modal_frequency validates threshold", {
