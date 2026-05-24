@@ -145,14 +145,18 @@ function sby_modal_frequency_codes_fortran(codes_list_sexp, max_codes_sexp) &
   real(c_double), pointer :: out_ratio(:)
 
   integer(c_int) :: ncols
+  integer(c_int) :: total_size
   integer(c_int) :: n
   integer(c_int) :: j
   integer(c_int) :: max_code
   integer(c_int) :: mode_code
   integer(c_int) :: mode_count
   real(c_double) :: ratio
+  integer(c_int), parameter :: openmp_min_columns = 4_c_int
+  integer(c_int), parameter :: openmp_min_cells = 20000_c_int
 
   ncols = Rf_length(codes_list_sexp)
+  total_size = 0_c_int
 
   result_sexp     = Rf_protect(Rf_allocVector(VECSXP, 4_c_int))
   out_column_sexp = Rf_protect(Rf_allocVector(INTSXP,  ncols))
@@ -174,6 +178,7 @@ function sby_modal_frequency_codes_fortran(codes_list_sexp, max_codes_sexp) &
     do j = 1_c_int, ncols
       col_sexp      = VECTOR_ELT(codes_list_sexp, j - 1_c_int)
       column_n(j)   = Rf_length(col_sexp)
+      total_size    = total_size + column_n(j)
       column_ptr(j) = INTEGER(col_sexp)
       out_column(j) = j
       out_ratio(j)  = 0.0_c_double
@@ -182,9 +187,10 @@ function sby_modal_frequency_codes_fortran(codes_list_sexp, max_codes_sexp) &
     end do
 
 !$omp parallel default(none) &
-!$omp shared(ncols, column_ptr, column_n, max_codes, out_ratio, out_code, out_count) &
-!$omp private(j, n, max_code, codes, counts, mode_code, mode_count, ratio)
-!$omp do schedule(dynamic,1)
+!$omp shared(ncols, total_size, column_ptr, column_n, max_codes, out_ratio, out_code, out_count) &
+!$omp private(j, n, max_code, codes, counts, mode_code, mode_count, ratio) &
+!$omp if(ncols >= openmp_min_columns .and. total_size >= openmp_min_cells)
+!$omp do schedule(static)
     do j = 1_c_int, ncols
       n        = column_n(j)
       max_code = max_codes(j)

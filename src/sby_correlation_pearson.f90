@@ -68,6 +68,7 @@ contains
     offset_i = (col_i - 1_c_int) * n
     offset_j = (col_j - 1_c_int) * n
 
+!$omp simd reduction(+:cov_acc)
     do row = 1_c_int, n
       cov_acc = cov_acc + (mat(offset_i + row) - means(col_i)) * (mat(offset_j + row) - means(col_j))
     end do
@@ -200,14 +201,18 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
   integer(c_int) :: j
   integer(c_int) :: idx_ij
   integer(c_int) :: idx_ji
+  integer(c_int) :: n_pairs
   real(c_double) :: corr
   logical :: all_valid
+  integer(c_int), parameter :: openmp_min_columns = 4_c_int
+  integer(c_int), parameter :: openmp_min_pair_rows = 50000_c_int
 
   call c_f_pointer(INTEGER(n_rows_sexp), n_rows_ptr, [1])
   call c_f_pointer(INTEGER(n_cols_sexp), n_cols_ptr, [1])
 
   n = n_rows_ptr(1)
   p = n_cols_ptr(1)
+  n_pairs = (p * (p - 1_c_int)) / 2_c_int
 
   call c_f_pointer(R_REAL(matrix_sexp), mat, [n * p])
 
@@ -225,13 +230,15 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
   if (all_valid) then
     allocate(means(p), ss_cols(p))
 
-!$omp parallel do default(none) private(j) shared(n, p, mat, means, ss_cols) schedule(static)
+!$omp parallel do default(none) private(j) shared(n, p, mat, means, ss_cols, n_pairs) schedule(static) &
+!$omp if(p >= openmp_min_columns .and. n * n_pairs >= openmp_min_pair_rows)
     do j = 1_c_int, p
       call column_mean_ss(mat, n, j, means(j), ss_cols(j))
     end do
 !$omp end parallel do
 
-!$omp parallel do default(none) private(i, j, idx_ij, idx_ji, corr) shared(n, p, mat, out, means, ss_cols) schedule(dynamic,1)
+!$omp parallel do default(none) private(i, j, idx_ij, idx_ji, corr) shared(n, p, mat, out, means, ss_cols, n_pairs) schedule(dynamic,32) &
+!$omp if(p >= openmp_min_columns .and. n * n_pairs >= openmp_min_pair_rows)
     do j = 1_c_int, p
       out((j - 1_c_int) * p + j) = 0.0_c_double
       do i = j + 1_c_int, p
@@ -246,7 +253,8 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
 
     deallocate(means, ss_cols)
   else
-!$omp parallel do default(none) private(i, j, idx_ij, idx_ji, corr) shared(n, p, mat, out) schedule(dynamic,1)
+!$omp parallel do default(none) private(i, j, idx_ij, idx_ji, corr) shared(n, p, mat, out, n_pairs) schedule(dynamic,32) &
+!$omp if(p >= openmp_min_columns .and. n * n_pairs >= openmp_min_pair_rows)
     do j = 1_c_int, p
       out((j - 1_c_int) * p + j) = 0.0_c_double
       do i = j + 1_c_int, p
