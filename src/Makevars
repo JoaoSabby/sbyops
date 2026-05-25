@@ -1,14 +1,14 @@
 # Flags de compilação do pacote sbyops.
 #
-# OpenMP é usado para paralelizar a análise por colunas. As variáveis
-# SHLIB_OPENMP_* são fornecidas pelo próprio R e tornam o Makevars mais portável.
+# OpenMP é usado para paralelizar a análise por colunas.
+# As macros SHLIB_OPENMP_* são fornecidas pelo próprio R.
 #
 # Observações de portabilidade:
-# - NÃO se usa -ffast-math, porque o pacote trabalha com dados estatísticos e
-#   precisa preservar comportamento seguro para NA, NaN e Inf.
-# - Flags específicas da CPU local, como -march=native e -mtune=native, não são
-#   usadas no pacote para preservar portabilidade binária e compatibilidade CRAN.
+# - Não forçamos níveis de otimização no pacote (ex.: -O3) para evitar
+#   warnings de portabilidade em R CMD check --as-cran.
+# - Perfis agressivos de compilação devem ser ativados apenas em ambientes
+#   controlados (ex.: via Makevars.site/Makevars.user).
 
-PKG_FCFLAGS = $(SHLIB_OPENMP_FCFLAGS) -O3 -ffree-line-length-none
-PKG_CFLAGS  = $(SHLIB_OPENMP_CFLAGS)  -O3
-PKG_LIBS    = $(SHLIB_OPENMP_CFLAGS)
+PKG_FFLAGS = $(SHLIB_OPENMP_FFLAGS)
+PKG_CFLAGS = $(SHLIB_OPENMP_CFLAGS)
+PKG_LIBS   = $(SHLIB_OPENMP_CFLAGS) $(FLIBS)
