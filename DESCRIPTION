@@ -1,24 +1,34 @@
 Package: sbyops
 Type: Package
-Title: Fast Tabular Column Selection Operations
-Version: 0.0.1
+Title: Core Computational Engine for the Sabby Ecosystem
+Version: 0.5.1
 Authors@R: person("Joao B. G.", "de Brito", role = c("aut", "cre"),
-    email = "JoaoSabby@users.noreply.github.com")
-Description: Provides fast, pipe-friendly column selection operations for
-    tabular preprocessing. The initial operations remove columns by modal
-    frequency and Pearson correlation using an R interface and native Fortran
-    cores for performance-oriented workloads.
+    email = "joaobatista.goncalvesdebrito@ugent.be")
+Description: Serves as the foundational high-performance computing backbone 
+    for the 'sabby' ecosystem, a suite designed for enterprise-grade 
+    tabular data preprocessing. While the broader ecosystem provides 
+    specialized modules for feature engineering, instance balancing, 
+    row filtering, and persistent auditing, this package delivers the 
+    low-level infrastructure. It features deeply optimized C++ and Fortran 
+    native cores, automatic memory-safe execution strategies, and native 
+    OpenMP parallelism. Built to handle massive analytical workloads, 
+    it integrates direct linkage to Intel oneMKL and standard BLAS/LAPACK 
+    libraries, explicitly engineered to support aggressive compiler optimizations.
 License: MIT + file LICENSE
 Encoding: UTF-8
+Language: en-US
+NeedsCompilation: yes
+Depends: 
+    R (>= 4.0.0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-SystemRequirements: OpenMP
+SystemRequirements: OpenMP, Intel oneMKL (optional)
 URL: https://github.com/JoaoSabby/sbyops
 BugReports: https://github.com/JoaoSabby/sbyops/issues
 Imports:
     rlang,
-    tidyselect
-Suggests:
+    tidyselect,
     testthat (>= 3.0.0),
+Suggests:
     tibble
 Config/testthat/edition: 3
