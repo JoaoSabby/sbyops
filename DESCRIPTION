@@ -1,13 +1,18 @@
 Package: sbyops
 Type: Package
 Title: Fast Tabular Column Selection Operations
-Version: 0.0.1
+Version: 0.5.1
 Authors@R: person("Joao B. G.", "de Brito", role = c("aut", "cre"),
-    email = "JoaoSabby@users.noreply.github.com")
-Description: Provides fast, pipe-friendly column selection operations for
-    tabular preprocessing. The initial operations remove columns by modal
-    frequency and Pearson correlation using an R interface and native Fortran
-    cores for performance-oriented workloads.
+    email = "joaobatista.goncalvesdebrito@ugent.be")
+Description: Accelerates tabular data preprocessing through high-performance,
+    pipe-friendly column selection routines. As a core component of the
+    'sabby' ecosystem, it integrates an intuitive R interface with deeply
+    optimized Fortran and C++ backends. Built for heavy analytical
+    workloads, the package features native OpenMP parallelism and direct
+    linkage to Intel oneMKL and standard BLAS/LAPACK libraries, engineered
+    to support aggressive GCC and Intel compiler optimizations. Initial
+    capabilities include ultra-fast dimensionality reduction via modal
+    frequency and Pearson correlation.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -17,8 +22,8 @@ URL: https://github.com/JoaoSabby/sbyops
 BugReports: https://github.com/JoaoSabby/sbyops/issues
 Imports:
     rlang,
-    tidyselect
+    tidyselect,
+    testthat (>= 3.0.0)
 Suggests:
-    testthat (>= 3.0.0),
     tibble
 Config/testthat/edition: 3
