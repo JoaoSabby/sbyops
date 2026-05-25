@@ -1,10 +1,10 @@
 
-#include <R.h>
-#include <Rinternals.h>
-#include <R_ext/Rdynload.h>
 #ifdef _OPENMP
 #include <omp.h>
 #endif
+#include <R.h>
+#include <Rinternals.h>
+#include <R_ext/Rdynload.h>
 
 /**
  * @title Verifica se um vetor atomico e constante
@@ -14,12 +14,15 @@
  * @return 1 quando a coluna e constante e 0 caso contrario
  */
 static int is_constant_atomic(SEXP x) {
+  /* Le tamanho da coluna e sai rapido para vetores com 0 ou 1 elemento */
   R_xlen_t n = XLENGTH(x);
   if (n <= 1) return 1;
 
+  /* Escolhe caminho especializado por tipo para reduzir overhead */
   switch (TYPEOF(x)) {
   case LGLSXP:
   case INTSXP: {
+    /* Compara todos os inteiros/logicos com o primeiro valor */
     int first = INTEGER(x)[0];
     for (R_xlen_t i = 1; i < n; ++i) {
       if (INTEGER(x)[i] != first) return 0;
@@ -27,6 +30,7 @@ static int is_constant_atomic(SEXP x) {
     return 1;
   }
   case REALSXP: {
+    /* Para double trata NA e NaN via ISNAN para semantica consistente */
     double first = REAL(x)[0];
     int first_nan = ISNAN(first);
     for (R_xlen_t i = 1; i < n; ++i) {
@@ -40,6 +44,7 @@ static int is_constant_atomic(SEXP x) {
     return 1;
   }
   case CPLXSXP: {
+    /* Em complex avalia parte real e imaginaria com a mesma logica de NaN */
     Rcomplex first = COMPLEX(x)[0];
     int first_nan_r = ISNAN(first.r), first_nan_i = ISNAN(first.i);
     for (R_xlen_t i = 1; i < n; ++i) {
@@ -50,6 +55,7 @@ static int is_constant_atomic(SEXP x) {
     return 1;
   }
   case STRSXP: {
+    /* Em string usa comparacao por ponteiro quando possivel e fallback por conteudo */
     SEXP first = STRING_ELT(x, 0);
     for (R_xlen_t i = 1; i < n; ++i) {
       SEXP cur = STRING_ELT(x, i);
@@ -60,6 +66,7 @@ static int is_constant_atomic(SEXP x) {
     return 1;
   }
   case RAWSXP: {
+    /* Para bytes faz comparacao direta valor a valor */
     Rbyte first = RAW(x)[0];
     for (R_xlen_t i = 1; i < n; ++i) {
       if (RAW(x)[i] != first) return 0;
@@ -67,6 +74,7 @@ static int is_constant_atomic(SEXP x) {
     return 1;
   }
   default:
+    /* Tipo nao tratado explicitamente fica como nao constante por seguranca */
     return 0;
   }
 }
