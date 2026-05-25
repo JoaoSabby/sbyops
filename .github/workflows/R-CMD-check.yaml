@@ -20,6 +20,7 @@ jobs:
           dnf -y update
           dnf -y install \
             git tar gzip xz make gcc gcc-c++ gcc-gfortran \
+            cmake pkgconf-pkg-config \
             pcre2-devel readline-devel zlib-devel bzip2 bzip2-devel \
             xz-devel libcurl-devel openssl-devel libjpeg-turbo-devel \
             libpng-devel libtiff-devel cairo-devel pango-devel \
