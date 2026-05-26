@@ -1,4 +1,5 @@
 #' @title Configure sbyops Execution Thresholds
+#' @name sby_config
 #'
 #' @usage
 #' sby_config(
