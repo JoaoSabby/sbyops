@@ -6,6 +6,7 @@
 
 - `sby_select_modal_frequency()`
 - `sby_select_correlation()`
+- `sby_config()`
 
 A API não expõe backend, `finite_mode`, `block_rows` ou `column_names`: essas decisões são internas.
 
@@ -68,3 +69,22 @@ OpenMP pode piorar desempenho em bases pequenas por overhead.
 ## Benchmark local
 
 Script: `inst/benchmarks/benchmark_correlation.R`.
+
+
+## Configuração de execução
+
+Use `sby_config()` para ajustar os limites de troca de engine e threads:
+
+- `sby_config_start_fortran` default `10000L`
+- `sby_config_start_blas` default `100000L`
+- `sby_config_openml_threads` default `2L`
+
+Exemplo:
+
+```r
+sby_config(
+  sby_config_start_fortran = 10000L,
+  sby_config_start_blas = 100000L,
+  sby_config_openml_threads = 2L
+)
+```
