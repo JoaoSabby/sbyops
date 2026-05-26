@@ -5,5 +5,5 @@
 \alias{sbyops-package}
 \title{sbyops: Fast Tabular Column Selection Operations}
 \description{
-Fast, pipe-friendly column selection operations for tabular preprocessing.
+Fast, pipe-friendly column selection operations for tabular preprocessing with native backends and temporary runtime thread-context management for OpenMP/BLAS intensive paths.
 }

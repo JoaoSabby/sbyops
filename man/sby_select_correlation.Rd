@@ -6,7 +6,7 @@
 sby_select_correlation(.data, ..., threshold)
 }
 \arguments{
-\item{.data}{A data.frame or tibble.}
+\item{.data}{A data frame, tibble, or numeric-compatible matrix.}
 \item{...}{Tidyselect column selectors. If empty, all numeric columns are evaluated.}
 \item{threshold}{Numeric scalar between 0 and 1. Columns are removed when absolute Pearson correlation is greater than or equal to this value.}
 }
@@ -15,4 +15,7 @@ sby_select_correlation(.data, ..., threshold)
 }
 \description{
 Removes highly correlated numeric columns. In each pair at or above \code{threshold}, the function removes the column with the larger mean absolute correlation against the still-active candidate columns.
+}
+\details{
+Engine selection is automatic using configured thresholds. During heavy execution paths (\code{fortran} and \code{blas}), the function applies a temporary thread context derived from \code{sby_config_max_threads} and restores the original environment and R options on exit.
 }

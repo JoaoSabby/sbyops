@@ -11,17 +11,17 @@ sby_config(
 }
 \arguments{
 \item{sby_config_start_fortran}{Integer threshold where automatic execution switches from streaming to Fortran backend.}
-\item{sby_config_start_blas}{Integer threshold where BLAS with OpenMP threading is enabled.}
-\item{sby_config_max_threads}{Integer positive scalar thread cap used by native backends.}
+\item{sby_config_start_blas}{Integer threshold where BLAS execution is enabled.}
+\item{sby_config_max_threads}{Integer positive scalar thread cap used by runtime thread contexts.}
 }
 \value{
 A named list with validated configuration values.
 }
 \description{
-Configure backend thresholds and thread settings used by automatic correlation execution planning.
+Configure backend thresholds and thread limit for automatic execution planning.
 }
 \details{
-This function stores runtime options consumed by internal dispatch logic. Values are validated as positive integer scalars.
+This function stores runtime options consumed by internal dispatch logic. \code{sby_config_max_threads} is the central thread cap used by runtime thread contexts.
 }
 \examples{
 # Apply default configuration values explicitly

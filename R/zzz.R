@@ -4,8 +4,7 @@
   options(
     sby_config_start_fortran = getOption("sby_config_start_fortran", 10000L),
     sby_config_start_blas = getOption("sby_config_start_blas", 100000L),
-    sby_config_max_threads = getOption("sby_config_max_threads", getOption("sby_config_openml_threads", 2L)),
-    sby_config_openml_threads = getOption("sby_config_openml_threads", getOption("sby_config_max_threads", 2L))
+    sby_config_max_threads = getOption("sby_config_max_threads", 2L)
   )
 
   # Return invisibly as required by .onLoad contract

@@ -22,6 +22,10 @@
 #' threshold, Fortran above that threshold, and BLAS with OpenMP for
 #' very large workloads
 #'
+#' During heavy execution paths (`fortran` and `blas` strategies), this function
+#' applies a temporary thread context derived from `sby_config_max_threads` and
+#' restores the original environment and R options on exit.
+#'
 #' @param .data A data frame, tibble, or numeric-compatible matrix
 #'
 #' @param ... Tidyselect expressions for data-frame-like inputs
@@ -103,23 +107,21 @@ sby_select_correlation <- function(.data, ..., threshold){
     selected_data = numeric_matrix
   )
 
-  # Preserve original backend and thread settings for restoration
-  original_omp_threads <- Sys.getenv("OMP_NUM_THREADS", unset = "")
-  requested_threads <- getOption("sby_config_max_threads", getOption("sby_config_openml_threads", 2L))
+  requested_threads <- sby_internal_get_max_threads()
+  context <- sby_internal_capture_thread_context(
+    useOpenmp = selected_strategy %in% c("fortran", "blas"),
+    useBlas = selected_strategy == "blas"
+  )
+  on.exit(sby_internal_restore_thread_context(context), add = TRUE)
 
-  # Configure OpenMP and BLAS threading for large workload strategies
-  if(selected_strategy == "blas"){
-    Sys.setenv(OMP_NUM_THREADS = as.character(requested_threads))
-    if(requireNamespace("RhpcBLASctl", quietly = TRUE)){
-      RhpcBLASctl::blas_set_num_threads(as.integer(requested_threads))
-      RhpcBLASctl::omp_set_num_threads(as.integer(requested_threads))
-    }
+  if(selected_strategy %in% c("fortran", "blas")){
+    sby_internal_apply_thread_context(
+      maxThreads = requested_threads,
+      threadContext = context,
+      useOpenmp = TRUE,
+      useBlas = selected_strategy == "blas"
+    )
   }
-
-  # Ensure thread and environment settings are restored after execution
-  on.exit({
-    Sys.setenv(OMP_NUM_THREADS = original_omp_threads)
-  }, add = TRUE)
 
   # Dispatch correlation computation according to selected strategy
   if(selected_strategy == "fortran"){
@@ -134,12 +136,14 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   # Compose concise execution message with backend and thread details
   blas_library <- extSoftVersion()["BLAS"]
+  rhpc_used <- !is.null(context$rhpc) && isTRUE(context$rhpc$used)
   cli::cli_alert_info(
     paste0(
-      "Engine=", selected_strategy,
-      " | BLAS=", blas_library,
-      " | OpenMP_threads=", requested_threads,
-      " | Fortran=", ifelse(selected_strategy == "fortran", "yes", "no")
+      "strategy=", selected_strategy,
+      " | BLAS_detected=", blas_library,
+      " | threads_requested=", requested_threads,
+      " | RhpcBLASctl_used=", ifelse(rhpc_used, "yes", "no"),
+      " | context_restore=enabled"
     )
   )
 
