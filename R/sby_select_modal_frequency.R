@@ -9,7 +9,10 @@
 #'
 #' @description Remove selected columns whose most frequent value proportion is greater than or equal to a threshold
 #'
-#' @details Uses a native type-specialized backend for logical, integer/factor, numeric, and character columns. Thread cap is controlled by `sby_config_max_threads` (with legacy fallback to `sby_config_openml_threads` (deprecated alias)).
+#' @details Uses a native type-specialized backend for logical, integer/factor, numeric, and character columns.
+#'
+#' The native routine receives an explicit `max_threads` argument from `sby_config_max_threads`
+#' and runs inside a temporary OpenMP thread context that is restored on exit.
 #'
 #' @param .data A data frame, tibble, or matrix
 #'
@@ -40,17 +43,15 @@ sby_select_modal_frequency <- function(.data, ..., threshold){
     return(sby_internal_restore_selected_data(selected_data = .data[, keep_mask, drop = FALSE], original = .data))
   }
 
-  max_threads <- getOption("sby_config_max_threads", getOption("sby_config_openml_threads", 2L))
-  max_threads <- as.integer(max_threads[[1]])
-  if(length(max_threads) != 1L || is.na(max_threads) || max_threads < 1L) max_threads <- 1L
+  max_threads <- sby_internal_get_max_threads()
 
-  keep_supported <- .Call(
+  keep_supported <- sby_internal_with_thread_context(.Call(
     "sby_modal_frequency_mask",
     selected_list[supported_mask],
     as.double(threshold),
     max_threads,
     PACKAGE = "sbyops"
-  )
+  ), maxThreads = max_threads, useOpenmp = TRUE, useBlas = FALSE)
 
   removed_supported <- supported_names[!keep_supported]
   keep_mask <- !(colnames(.data) %in% removed_supported)
