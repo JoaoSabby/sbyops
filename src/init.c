@@ -6,6 +6,7 @@
 extern SEXP sby_modal_frequency_codes_fortran(SEXP codes_list, SEXP max_codes);
 extern SEXP sby_correlation_pearson_matrix_fortran(SEXP matrix, SEXP n_rows, SEXP n_cols);
 extern SEXP sby_non_constant_mask(SEXP cols);
+extern SEXP sby_modal_frequency_mask(SEXP selected_list, SEXP threshold, SEXP max_threads);
 
 /**
  * @title Tabela de rotinas nativas expostas ao R
@@ -15,6 +16,7 @@ static const R_CallMethodDef CallEntries[] = {
   {"sby_modal_frequency_codes_fortran", (DL_FUNC) &sby_modal_frequency_codes_fortran, 2},
   {"sby_correlation_pearson_matrix_fortran", (DL_FUNC) &sby_correlation_pearson_matrix_fortran, 3},
   {"sby_non_constant_mask", (DL_FUNC) &sby_non_constant_mask, 1},
+  {"sby_modal_frequency_mask", (DL_FUNC) &sby_modal_frequency_mask, 3},
   {NULL, NULL, 0}
 };
 

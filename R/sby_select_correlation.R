@@ -105,7 +105,7 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   # Preserve original backend and thread settings for restoration
   original_omp_threads <- Sys.getenv("OMP_NUM_THREADS", unset = "")
-  requested_threads <- getOption("sby_config_openml_threads", 2L)
+  requested_threads <- getOption("sby_config_max_threads", getOption("sby_config_openml_threads", 2L))
 
   # Configure OpenMP and BLAS threading for large workload strategies
   if(selected_strategy == "blas"){

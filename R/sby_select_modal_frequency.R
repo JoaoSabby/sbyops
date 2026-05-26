@@ -9,7 +9,7 @@
 #'
 #' @description Remove selected columns whose most frequent value proportion is greater than or equal to a threshold
 #'
-#' @details Columns are encoded as integer codes and evaluated in native Fortran for efficient modal-frequency estimation
+#' @details Uses a native type-specialized backend for logical, integer/factor, numeric, and character columns. Thread cap is controlled by `sby_config_max_threads` (with legacy fallback to `sby_config_openml_threads` (deprecated alias)).
 #'
 #' @param .data A data frame, tibble, or matrix
 #'
@@ -18,77 +18,41 @@
 #' @param threshold A numeric scalar in the closed interval `[0, 1]`
 #'
 #' @return An object with the same structural class as `.data` with high modal-frequency columns removed
-#'
-#' @seealso [sby_select_correlation()], [sby_select_non_constant()], [sby_config()]
-#'
-#' @references
-#'
-#' @examples
-#' # Build example data with a high modal-frequency column
-#' modal_data <- data.frame(a = c("x", "x", "x", "y"), b = c(1, 2, 3, 4))
-#'
-#' # Apply modal-frequency filter with explicit arguments
-#' sby_select_modal_frequency(
-#'   .data = modal_data,
-#'   threshold = 0.75
-#' )
 #' @export
 sby_select_modal_frequency <- function(.data, ..., threshold){
-
   sby_internal_validate_tabular_input(.data = .data)
-  threshold <- sby_internal_validate_threshold_scalar(
-    threshold = threshold,
-    arg_name = "threshold"
-  )
+  threshold <- sby_internal_validate_threshold_scalar(threshold = threshold, arg_name = "threshold")
 
-  if(ncol(.data) == 0L || nrow(.data) == 0L){
-    return(.data)
-  }
+  if(ncol(.data) == 0L || nrow(.data) == 0L) return(.data)
 
-  resolved_names <- sby_internal_resolve_column_names(.data = .data)
-  colnames(.data) <- resolved_names
-
-  selected_columns <- sby_internal_eval_select(
-    .data = .data,
-    ...,
-    default = "all"
-  )
-  if(length(selected_columns) == 0L){
-    return(.data)
-  }
+  colnames(.data) <- sby_internal_resolve_column_names(.data = .data)
+  selected_columns <- sby_internal_eval_select(.data = .data, ..., default = "all")
+  if(length(selected_columns) == 0L) return(.data)
 
   selected_data <- .data[, unname(selected_columns), drop = FALSE]
-  supported_mask <- vapply(
-    X = as.data.frame(selected_data),
-    FUN = sby_internal_is_modal_supported,
-    FUN.VALUE = logical(1L)
-  )
-  if(!any(supported_mask)){
-    return(.data)
+  selected_list <- as.list(as.data.frame(selected_data, stringsAsFactors = FALSE))
+  supported_mask <- vapply(selected_list, sby_internal_is_modal_supported, logical(1L))
+  if(!any(supported_mask)) return(.data)
+
+  supported_names <- names(selected_list)[supported_mask]
+  if(threshold <= 0){
+    keep_mask <- !(colnames(.data) %in% supported_names)
+    return(sby_internal_restore_selected_data(selected_data = .data[, keep_mask, drop = FALSE], original = .data))
   }
 
-  supported_data <- selected_data[, supported_mask, drop = FALSE]
-  supported_column_names <- colnames(supported_data)
-  encoded_columns <- lapply(
-    X = as.data.frame(supported_data),
-    FUN = sby_internal_encode_modal_column
-  )
-  column_codes <- lapply(X = encoded_columns, FUN = `[[`, "codes")
-  column_max_codes <- vapply(X = encoded_columns, FUN = `[[`, FUN.VALUE = integer(1), "max_code")
+  max_threads <- getOption("sby_config_max_threads", getOption("sby_config_openml_threads", 2L))
+  max_threads <- as.integer(max_threads[[1]])
+  if(length(max_threads) != 1L || is.na(max_threads) || max_threads < 1L) max_threads <- 1L
 
-  native_result <- .Call(
-    .NAME = "sby_modal_frequency_codes_fortran",
-    codes = column_codes,
-    max_codes = as.integer(column_max_codes),
+  keep_supported <- .Call(
+    .NAME = "sby_modal_frequency_mask",
+    selected_list = selected_list[supported_mask],
+    threshold = as.double(threshold),
+    max_threads = max_threads,
     PACKAGE = "sbyops"
   )
-  names(native_result) <- c("column_index", "ratio", "code", "count")
 
-  removed_columns <- supported_column_names[native_result$column_index[native_result$ratio >= threshold]]
-  kept_columns <- setdiff(colnames(.data), removed_columns)
-  filtered_data <- .data[, kept_columns, drop = FALSE]
-  sby_internal_restore_selected_data(selected_data = filtered_data, original = .data)
+  removed_supported <- supported_names[!keep_supported]
+  keep_mask <- !(colnames(.data) %in% removed_supported)
+  sby_internal_restore_selected_data(selected_data = .data[, keep_mask, drop = FALSE], original = .data)
 }
-####
-## End
-# 
