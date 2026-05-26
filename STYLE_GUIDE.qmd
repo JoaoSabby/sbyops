@@ -1,0 +1,143 @@
+---
+title: "Guia de Estilo do Projeto sbyops"
+format:
+  html:
+    toc: true
+    number-sections: false
+lang: pt-BR
+---
+
+# Objetivo
+
+Este guia define o padrão de escrita para scripts, documentação e testes do projeto `sbyops`.
+O foco é manter consistência, legibilidade, auditabilidade e estabilidade da API.
+
+# Princípios gerais
+
+- Priorizar clareza sem sacrificar precisão técnica.
+- Escrever código e testes como documentação executável.
+- Manter contratos explícitos para entradas, saídas e erros.
+- Evitar mudanças de semântica sem cobertura de testes equivalente.
+- Tratar robustez, desempenho e manutenção como requisitos de primeira classe.
+
+# Convenções de nomenclatura
+
+## Scripts R
+
+- Variáveis devem usar `camelCase`.
+- Funções públicas existentes em `snake_case` devem manter o nome atual para preservar API.
+- Novas funções não públicas podem seguir convenção local do módulo, com preferência por consistência com o arquivo.
+- Não usar operador de escopo duplo em scripts R.
+
+## Testes
+
+- Usar nomes descritivos em `test_that(...)`.
+- Evitar nomes genéricos como `works`, `basic test`, `runs`.
+- Referenciar helpers internos com `getFromNamespace`.
+- Não usar `package::function` e não usar `package:::function` em testes.
+
+# Convenções de comentários
+
+- Comentários devem ser técnicos, curtos e orientados ao contrato.
+- Iniciar comentários com `# ` simples.
+- Não usar comentários decorativos com caracteres repetidos.
+- Não numerar seções de comentários em arquivos de teste.
+- Não usar travessão em comentários, mensagens ou documentação.
+
+Exemplo recomendado:
+
+```r
+# Este teste valida que colunas nao selecionadas permanecem no resultado
+```
+
+Exemplo a evitar:
+
+```r
+# ===== Teste 1 =====
+```
+
+# Regras para testes
+
+## Estrutura esperada
+
+- Cada teste deve comunicar:
+  - função alvo;
+  - contrato validado;
+  - caso de borda protegido;
+  - risco de regressão mitigado.
+- Cada função deve ter cobertura de:
+  - caso normal;
+  - caso de borda;
+  - caso de erro;
+  - caso com valor ausente quando aplicável;
+  - estabilidade de tipo ou classe de retorno.
+
+## Boas práticas
+
+- Evitar testes frágeis dependentes de aleatoriedade sem `set.seed`.
+- Evitar testes dependentes de número exato de threads, salvo quando explicitamente controlado ou pulado.
+- Manter benchmarks fora do fluxo padrão de `R CMD check`.
+- Usar referências pequenas e determinísticas para testes de equivalência numérica.
+
+# Regras de API e arquitetura
+
+- Não alterar API pública sem justificativa formal e documentação.
+- Não remover funções internas sem análise de uso no repositório.
+- Não alterar semântica de `NA`, `NaN`, `Inf`, `factor`, `character`, `logical`, `numeric` sem teste explícito.
+- Preservar classes de retorno (`data.frame`, `tibble`, `matrix`) conforme contrato.
+
+# Diretrizes de documentação
+
+- Manter `README`, `NAMESPACE`, `DESCRIPTION` e `man/` consistentes com o código.
+- Não prometer desempenho fixo em documentação pública.
+- Declarar limitações e pré-condições de forma verificável.
+- Atualizar exemplos para que sejam leves e compatíveis com `R CMD check`.
+
+# Código nativo e segurança
+
+- Garantir registro nativo consistente em `src/init.c`.
+- Validar número de argumentos de cada símbolo `.Call`.
+- Revisar uso de `PROTECT` e `UNPROTECT`.
+- Evitar chamadas inseguras à API do R dentro de regiões OpenMP.
+- Usar tipos adequados para tamanho, incluindo `R_xlen_t` quando aplicável.
+
+# Desempenho e benchmarking
+
+- Medir desempenho com cenários representativos.
+- Documentar contexto de benchmark: tamanho, tipos de coluna, estratégia e threads.
+- Não executar benchmark pesado automaticamente em testes unitários.
+- Usar fallback condicional quando pacote opcional de benchmark não estiver disponível.
+
+# Checklist de revisão antes de merge
+
+- API pública preservada ou mudança formalmente justificada.
+- Testes cobrindo contratos principais e casos de erro.
+- Documentação alinhada ao comportamento real do código.
+- Registro nativo consistente com implementações em `src`.
+- Ausência de dependências novas sem atualização de `DESCRIPTION`.
+- Benchmarks isolados do fluxo de `R CMD check`.
+
+# Modelo de escrita para novos testes
+
+```r
+# Este teste valida o contrato de threshold inclusivo em [0, 1]
+test_that("sby_internal_validate_threshold_scalar rejeita valores fora da faixa", {
+  validator <- getFromNamespace("sby_internal_validate_threshold_scalar", "sbyops")
+
+  expect_error(validator(-0.1, "threshold"), "between 0 and 1")
+  expect_error(validator(1.1, "threshold"), "between 0 and 1")
+  expect_identical(validator(0, "threshold"), 0)
+  expect_identical(validator(1, "threshold"), 1)
+})
+```
+
+# Governança do guia
+
+Este guia deve ser versionado com o repositório e revisado quando houver:
+
+- mudança de arquitetura;
+- mudança de política de testes;
+- atualização de convenções de nomenclatura;
+- inclusão de novos componentes nativos.
+
+A recomendação é revisar o documento em cada release menor do pacote.

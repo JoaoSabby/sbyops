@@ -1,3 +1,5 @@
+testPath <- getFromNamespace("test_path", "testthat")
+
 asTibble <- function(x){
   if(!requireNamespace("tibble", quietly = TRUE)){
     skip("tibble nao instalado")
@@ -58,6 +60,6 @@ test_that("empty selection and zero rows/cols return unchanged", {
 })
 
 test_that("implementation does not call encode helper in main path", {
-  code <- paste(readLines(file.path("R", "sby_select_modal_frequency.R")), collapse = "\n")
+  code <- paste(readLines(testPath("..", "..", "R", "sby_select_modal_frequency.R")), collapse = "\n")
   expect_false(grepl("sby_internal_encode_modal_column", code, fixed = TRUE))
 })
