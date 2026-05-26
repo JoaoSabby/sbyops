@@ -1,49 +1,62 @@
-#' Remove constant columns efficiently
+#' @title Remove Constant Columns
 #'
-#' `sby_select_non_constant()` removes selected columns whose values are
-#' constant (all observations are equal)
+#' @usage sby_select_non_constant(.data, ...)
 #'
-#' The native backend evaluates each column independently and uses implicit
-#' OpenMP parallelism over columns when available
+#' @description Remove selected columns that contain a single repeated value across all observations
 #'
-#' @param .data A data.frame, tibble, or matrix
-#' @param ... Tidyselect column selectors. If empty, all columns are evaluated
-#'   Matrix input evaluates all columns
+#' @details The native C backend evaluates each selected column and supports column-parallel execution when OpenMP is available
 #'
-#' @return `.data` without constant selected columns
+#' @param .data A data frame, tibble, or matrix
+#'
+#' @param ... Tidyselect expressions for data-frame-like inputs. When omitted, all columns are considered
+#'
+#' @return An object with the same structural class as `.data` without selected constant columns
+#'
+#' @seealso [sby_select_correlation()], [sby_select_modal_frequency()]
+#'
+#' @references
+#'
+#' @examples
+#' constantData <- data.frame(a = c(1, 1, 1), b = c(1, 2, 3))
+#' sby_select_non_constant(constantData)
 #' @export
-sby_select_non_constant <- function(.data, ...) {
+sby_select_non_constant <- function(.data, ...){
 
-  # Valida cedo para evitar custo desnecessario em entrada invalida
-  sby_int_validate_tabular_input(.data)
+  sby_internal_validate_tabular_input(.data = .data)
 
-  # Sai rapido quando nao ha linhas ou colunas
-  if (ncol(.data) == 0L || nrow(.data) == 0L) {
+  if(ncol(.data) == 0L || nrow(.data) == 0L){
     return(.data)
   }
 
-  # Normaliza nomes para manter comportamento consistente no tidyselect
-  resolved_names <- sby_int_resolve_column_names(.data)
-  colnames(.data) <- resolved_names
+  resolvedNames <- sby_internal_resolve_column_names(.data = .data)
+  colnames(.data) <- resolvedNames
 
-  # Define quais colunas vao para o filtro
-  selected <- sby_int_eval_select(.data, ..., default = "all")
-  if (length(selected) == 0L) {
+  selectedColumns <- sby_internal_eval_select(
+    .data = .data,
+    ...,
+    default = "all"
+  )
+  if(length(selectedColumns) == 0L){
     return(.data)
   }
 
-  # Converte para lista de vetores atomicos no formato esperado pelo backend
-  selected_data <- .data[, unname(selected), drop = FALSE]
-  selected_list <- as.list(as.data.frame(selected_data, stringsAsFactors = FALSE))
+  selectedData <- .data[, unname(selectedColumns), drop = FALSE]
+  selectedList <- as.list(as.data.frame(selectedData, stringsAsFactors = FALSE))
 
-  # Recebe mascara logica do C onde TRUE mantem e FALSE remove
-  keep_mask <- .Call("sby_non_constant_mask", selected_list, PACKAGE = "sbyops")
-  removed <- colnames(selected_data)[!keep_mask]
+  keepMask <- .Call(
+    .NAME = "sby_non_constant_mask",
+    selected_list = selectedList,
+    PACKAGE = "sbyops"
+  )
+  removedColumns <- colnames(selectedData)[!keepMask]
+  keptColumns <- setdiff(colnames(.data), removedColumns)
+  filteredData <- .data[, keptColumns, drop = FALSE]
 
-  # Remove apenas colunas constantes dentro da selecao
-  keep <- setdiff(colnames(.data), removed)
-  out <- .data[, keep, drop = FALSE]
-
-  # Preserva a classe original de saida
-  return(sby_int_restore_selected_data(out, .data))
+  sby_internal_restore_selected_data(
+    selected_data = filteredData,
+    original = .data
+  )
 }
+####
+## End
+# 

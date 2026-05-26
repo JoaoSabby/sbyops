@@ -6,3 +6,5 @@ export(sby_select_modal_frequency)
 export(sby_select_correlation)
 
 export(sby_select_non_constant)
+
+export(sby_config)
