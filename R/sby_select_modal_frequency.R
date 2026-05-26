@@ -1,6 +1,11 @@
 #' @title Select Columns by Modal Frequency
 #'
-#' @usage sby_select_modal_frequency(.data, ..., threshold)
+#' @usage
+#' sby_select_modal_frequency(
+#'   .data,
+#'   ...,
+#'   threshold
+#' )
 #'
 #' @description Remove selected columns whose most frequent value proportion is greater than or equal to a threshold
 #'
@@ -14,13 +19,19 @@
 #'
 #' @return An object with the same structural class as `.data` with high modal-frequency columns removed
 #'
-#' @seealso [sby_select_correlation()], [sby_select_non_constant()]
+#' @seealso [sby_select_correlation()], [sby_select_non_constant()], [sby_config()]
 #'
 #' @references
 #'
 #' @examples
-#' modalData <- data.frame(a = c("x", "x", "x", "y"), b = c(1, 2, 3, 4))
-#' sby_select_modal_frequency(modalData, threshold = 0.75)
+#' # Build example data with a high modal-frequency column
+#' modal_data <- data.frame(a = c("x", "x", "x", "y"), b = c(1, 2, 3, 4))
+#'
+#' # Apply modal-frequency filter with explicit arguments
+#' sby_select_modal_frequency(
+#'   .data = modal_data,
+#'   threshold = 0.75
+#' )
 #' @export
 sby_select_modal_frequency <- function(.data, ..., threshold){
 

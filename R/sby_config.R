@@ -13,7 +13,12 @@
 #'
 #' @details
 #' This function stores runtime options consumed by internal dispatch
-#' logic. Values are validated as positive integer scalars
+#' logic. Values are validated as positive integer scalars.
+#'
+#' Default values are:
+#' - `sby_config_start_fortran = 10000L`
+#' - `sby_config_start_blas = 100000L`
+#' - `sby_config_openml_threads = 2L`
 #'
 #' @param sby_config_start_fortran Integer threshold where automatic
 #' execution switches from streaming to Fortran backend
@@ -27,6 +32,7 @@
 #' @return A named list with validated configuration values
 #'
 #' @examples
+#' # Apply default configuration values explicitly
 #' sby_config(
 #'   sby_config_start_fortran = 10000L,
 #'   sby_config_start_blas = 100000L,
