@@ -1,3 +1,12 @@
+/*
+ * @file sby_modal_frequency_mask.c
+ * @brief Native implementation for modal-frequency masking used by sbyops.
+ *
+ * This file exposes `sby_modal_frequency_mask()`, which evaluates each selected
+ * column and returns a logical mask indicating whether the column should be
+ * kept (1) or removed (0) according to a modal-frequency threshold.
+ */
+
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
@@ -6,6 +15,14 @@
 #include <string.h>
 #include <math.h>
 #ifdef _OPENMP
+/*
+ * Rinternals.h defines `match` as a macro for internal API dispatch.
+ * Intel/oneAPI OpenMP headers use `match(...)` in `#pragma omp` directives.
+ * Undefining the R macro here prevents pragma corruption during preprocessing.
+ */
+#ifdef match
+#undef match
+#endif
 #include <omp.h>
 #endif
 
