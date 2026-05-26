@@ -51,7 +51,10 @@ static int should_remove_integer_like(SEXP x, R_xlen_t n, R_xlen_t limit){
   int *keys = (int*) malloc((size_t)cap*sizeof(int));
   int *vals = (int*) calloc((size_t)cap,sizeof(int));
   unsigned char *used = (unsigned char*) calloc((size_t)cap,1);
-  if(!keys||!vals||!used) Rf_error("Memory allocation failed.");
+  if(!keys||!vals||!used){
+    free(keys); free(vals); free(used);
+    Rf_error("Memory allocation failed.");
+  }
   for(R_xlen_t i=0;i<n;i++){
     int cur=v[i]; if(cur==NA_INTEGER) continue;
     uint32_t h = (uint32_t)cur * 2654435761u;
@@ -69,7 +72,10 @@ static int should_remove_real(SEXP x, R_xlen_t n, R_xlen_t limit){
   uint64_t *keys=(uint64_t*)malloc((size_t)cap*sizeof(uint64_t));
   int *vals=(int*)calloc((size_t)cap,sizeof(int));
   unsigned char *used=(unsigned char*)calloc((size_t)cap,1);
-  if(!keys||!vals||!used) Rf_error("Memory allocation failed.");
+  if(!keys||!vals||!used){
+    free(keys); free(vals); free(used);
+    Rf_error("Memory allocation failed.");
+  }
   for(R_xlen_t i=0;i<n;i++){
     double d=v[i];
     uint64_t k;
@@ -92,7 +98,10 @@ static int should_remove_character(SEXP x, R_xlen_t n, R_xlen_t limit){
   SEXP *keys=(SEXP*)malloc((size_t)cap*sizeof(SEXP));
   int *vals=(int*)calloc((size_t)cap,sizeof(int));
   unsigned char *used=(unsigned char*)calloc((size_t)cap,1);
-  if(!keys||!vals||!used) Rf_error("Memory allocation failed.");
+  if(!keys||!vals||!used){
+    free(keys); free(vals); free(used);
+    Rf_error("Memory allocation failed.");
+  }
   for(R_xlen_t i=0;i<n;i++){
     SEXP s=STRING_ELT(x,i);
     uintptr_t kk=(uintptr_t)s;
@@ -123,6 +132,7 @@ SEXP sby_modal_frequency_mask(SEXP selected_list, SEXP threshold, SEXP max_threa
   for(R_xlen_t j=0;j<p;j++){
     SEXP col = VECTOR_ELT(selected_list, j);
     R_xlen_t n = XLENGTH(col);
+    if(n == 0){ res[j] = 1; continue; }
     R_xlen_t limit = (R_xlen_t) ceil(thr * (double)n);
     int remove = 0;
     if(limit <= 0) { res[j]=0; continue; }
