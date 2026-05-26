@@ -24,7 +24,7 @@ A API não expõe backend, `finite_mode`, `block_rows` ou `column_names`: essas 
 
 ## Seleção por frequência modal
 
-` sby_select_modal_frequency()` remove colunas com frequência modal `>= threshold` (limite inclusivo).
+` sby_select_modal_frequency()` remove colunas com frequência modal `>= threshold` (limite inclusivo), usando backend nativo por tipo (logical, integer/factor, numeric e character).
 
 - Suporte de avaliação: factor, character, integer, logical, numeric.
 - Colunas não avaliáveis permanecem no resultado.
@@ -77,7 +77,7 @@ Use `sby_config()` para ajustar os limites de troca de engine e threads:
 
 - `sby_config_start_fortran` default `10000L`
 - `sby_config_start_blas` default `100000L`
-- `sby_config_openml_threads` default `2L`
+- `sby_config_max_threads` default `2L`
 
 Exemplo:
 
@@ -85,6 +85,6 @@ Exemplo:
 sby_config(
   sby_config_start_fortran = 10000L,
   sby_config_start_blas = 100000L,
-  sby_config_openml_threads = 2L
+  sby_config_max_threads = 2L
 )
 ```
