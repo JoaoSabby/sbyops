@@ -1,4 +1,5 @@
 #' @title Remove Constant Columns
+#' @name sby_select_non_constant
 #'
 #' @usage sby_select_non_constant(.data, ...)
 #'
@@ -13,8 +14,6 @@
 #' @return An object with the same structural class as `.data` without selected constant columns
 #'
 #' @seealso [sby_select_correlation()], [sby_select_modal_frequency()]
-#'
-#' @references
 #'
 #' @examples
 #' constantData <- data.frame(a = c(1, 1, 1), b = c(1, 2, 3))
