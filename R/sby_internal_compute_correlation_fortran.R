@@ -15,10 +15,10 @@ sby_internal_compute_correlation_fortran <- function(numeric_matrix){
 
   # Delegate matrix correlation calculation to native Fortran backend
   native_vector <- .Call(
-    .NAME = "sby_correlation_pearson_matrix_fortran",
-    mat = numeric_matrix,
-    nrow = as.integer(nrow(numeric_matrix)),
-    ncol = as.integer(ncol(numeric_matrix)),
+    "sby_correlation_pearson_matrix_fortran",
+    numeric_matrix,
+    as.integer(nrow(numeric_matrix)),
+    as.integer(ncol(numeric_matrix)),
     PACKAGE = "sbyops"
   )
 

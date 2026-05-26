@@ -45,10 +45,10 @@ sby_select_modal_frequency <- function(.data, ..., threshold){
   if(length(max_threads) != 1L || is.na(max_threads) || max_threads < 1L) max_threads <- 1L
 
   keep_supported <- .Call(
-    .NAME = "sby_modal_frequency_mask",
-    selected_list = selected_list[supported_mask],
-    threshold = as.double(threshold),
-    max_threads = max_threads,
+    "sby_modal_frequency_mask",
+    selected_list[supported_mask],
+    as.double(threshold),
+    max_threads,
     PACKAGE = "sbyops"
   )
 

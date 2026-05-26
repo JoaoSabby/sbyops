@@ -43,8 +43,8 @@ sby_select_non_constant <- function(.data, ...){
   selectedList <- as.list(as.data.frame(selectedData, stringsAsFactors = FALSE))
 
   keepMask <- .Call(
-    .NAME = "sby_non_constant_mask",
-    selected_list = selectedList,
+    "sby_non_constant_mask",
+    selectedList,
     PACKAGE = "sbyops"
   )
   removedColumns <- colnames(selectedData)[!keepMask]

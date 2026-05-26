@@ -1,3 +1,12 @@
+testPath <- getFromNamespace("test_path", "testthat")
+
+asTibble <- function(x){
+  if(!requireNamespace("tibble", quietly = TRUE)){
+    skip("tibble nao instalado")
+  }
+  getFromNamespace("as_tibble", "tibble")(x)
+}
+
 modal_reference_drop <- function(x, threshold){
   if(length(x) == 0L) return(FALSE)
   enc <- as.integer(factor(x, exclude = NULL))
@@ -36,7 +45,7 @@ test_that("threshold 0 removes all selected supported and threshold 1 only const
 
 test_that("supports data.frame tibble matrix and tidyselect", {
   df <- data.frame(a=c(1,1,1,2), b=c(1,2,3,4), cc=c("x","x","x","y"))
-  tb <- tibble::as_tibble(df)
+  tb <- asTibble(df)
   m <- as.matrix(df[c("a","b")])
   expect_s3_class(sby_select_modal_frequency(tb, starts_with("c"), threshold = 0.75), "tbl_df")
   expect_true(is.matrix(sby_select_modal_frequency(m, threshold = 0.75)))
@@ -51,6 +60,6 @@ test_that("empty selection and zero rows/cols return unchanged", {
 })
 
 test_that("implementation does not call encode helper in main path", {
-  code <- paste(readLines(testthat::test_path("..", "..", "R", "sby_select_modal_frequency.R")), collapse = "\n")
+  code <- paste(readLines(testPath("..", "..", "R", "sby_select_modal_frequency.R")), collapse = "\n")
   expect_false(grepl("sby_internal_encode_modal_column", code, fixed = TRUE))
 })
