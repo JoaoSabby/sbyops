@@ -17,8 +17,8 @@ sby_internal_compute_correlation_fortran <- function(numeric_matrix){
   native_vector <- .Call(
     "sby_correlation_pearson_matrix_fortran",
     numeric_matrix,
-    as.integer(nrow(numeric_matrix)),
-    as.integer(ncol(numeric_matrix)),
+    as.integer(fnrow(numeric_matrix)),
+    as.integer(fncol(numeric_matrix)),
     PACKAGE = "sbyops"
   )
 

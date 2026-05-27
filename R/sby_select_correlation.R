@@ -57,7 +57,7 @@ sby_select_correlation <- function(.data, ..., threshold){
   )
 
   # Return unchanged input when no rows or columns are available
-  if(ncol(.data) == 0L || nrow(.data) == 0L){
+  if(fncol(.data) == 0L || fnrow(.data) == 0L){
 
     # Return input unchanged for empty tabular shapes
     return(.data)

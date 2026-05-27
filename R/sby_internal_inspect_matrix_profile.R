@@ -28,8 +28,8 @@
 sby_internal_inspect_matrix_profile <- function(mat){
 
   # Capture matrix row and column dimensions for profile payload
-  n_rows <- nrow(mat)
-  n_cols <- ncol(mat)
+  n_rows <- fnrow(mat)
+  n_cols <- fncol(mat)
 
   # Estimate memory footprint used by strategy dispatch
   memory_profile <- sby_internal_estimate_correlation_memory(

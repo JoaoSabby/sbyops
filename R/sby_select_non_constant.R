@@ -23,7 +23,7 @@ sby_select_non_constant <- function(.data, ...){
 
   sby_internal_validate_tabular_input(.data = .data)
 
-  if(ncol(.data) == 0L || nrow(.data) == 0L){
+  if(fncol(.data) == 0L || fnrow(.data) == 0L){
     return(.data)
   }
 
