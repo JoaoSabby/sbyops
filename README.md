@@ -8,6 +8,28 @@
 - `sby_select_correlation()`
 - `sby_select_non_constant()`
 - `sby_config()`
+- `sby_table_optimize_scheme()`
+- `sby_table_write()`
+
+## Escrita de tabelas (Arrow/Parquet)
+
+As funções `sby_table_optimize_scheme()` e `sby_table_write()` implementam:
+
+- inferência automática de tipos Arrow por coluna,
+- heurística de `dictionary encoding` para fatores e `character`,
+- escolha automática de `chunk_size` (row group),
+- compressão configurável por `options()` com fallback seguro.
+
+## Pacotes externos considerados para otimização
+
+O módulo tabular foi estruturado para coexistir com pacotes de alto desempenho:
+
+- `data.table`, `dtplyr`, `tidytable`, `tidyfast`, `fastplyr` para pré-processamento tabular;
+- `kit`, `cheapr`, `Rfast`, `coop` para operações vetorizadas auxiliares;
+- `vctrs` para padronização/coerção de tipos antes de escrita;
+- `fastmap` para cache de metadados de schema em pipelines repetitivos.
+
+O núcleo de inferência crítico permanece em C++ e backend Arrow nativo.
 
 ## Entradas suportadas
 

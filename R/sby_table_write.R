@@ -23,8 +23,7 @@
 #' automatically when absent.
 #'
 #' @return
-#' Invisibly returns a list with the final file path, Arrow schema, and internal
-#' writing parameters.
+#' Invisibly returns \code{NULL}.
 #'
 #' @usage sby_table_write(.data, file)
 #'
@@ -100,7 +99,7 @@ sby_table_write <- function(.data, file){
     allow_truncated_timestamps = FALSE
   )
   
-  # Return useful metadata without printing to the console
+  # Return quietly for pipeline-friendly usage
   invisible()
 }
 ####
