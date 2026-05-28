@@ -4,8 +4,6 @@ validateTabular <- getFromNamespace("sby_internal_validate_tabular_input", "sbyo
 resolveNames <- getFromNamespace("sby_internal_resolve_column_names", "sbyops")
 evalSelect <- getFromNamespace("sby_internal_eval_select", "sbyops")
 isNumericColumn <- getFromNamespace("sby_internal_is_numeric_column", "sbyops")
-isModalSupported <- getFromNamespace("sby_internal_is_modal_supported", "sbyops")
-encodeModal <- getFromNamespace("sby_internal_encode_modal_column", "sbyops")
 validateThreshold <- getFromNamespace("sby_internal_validate_threshold_scalar", "sbyops")
 validateCorrThreshold <- getFromNamespace("sby_internal_validate_correlation_threshold", "sbyops")
 
@@ -53,22 +51,6 @@ test_that("sby_internal_is_numeric_column valida vetores numericos e rejeita est
   expect_false(isNumericColumn(matrix(1:4, ncol = 2)))
 })
 
-test_that("sby_internal_is_modal_supported cobre tipos suportados e nao suportados", {
-  expect_true(isModalSupported(c("a", NA_character_)))
-  expect_true(isModalSupported(c(1L, 2L)))
-  expect_true(isModalSupported(c(TRUE, FALSE)))
-  expect_false(isModalSupported(matrix(1:4, ncol = 2)))
-  expect_false(isModalSupported(I(list(1, 2))))
-})
-
-test_that("sby_internal_encode_modal_column retorna codigos inteiros estaveis", {
-  x <- factor(c("a", NA, "a", "b"), levels = c("a", "b", "z"))
-  res <- encodeModal(x)
-  expect_type(res, "list")
-  expect_true(is.integer(res$codes))
-  expect_equal(length(res$codes), length(x))
-  expect_true(res$max_code >= 3L)
-})
 
 test_that("sby_internal_validate_threshold_scalar aceita limites e rejeita invalidos", {
   expect_identical(validateThreshold(0, "threshold"), 0)

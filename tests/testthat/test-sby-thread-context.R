@@ -62,10 +62,3 @@ test_that("sby_select_correlation nao deixa efeitos colaterais em threads", {
   sby_select_correlation(df, threshold = 0.9)
   expect_identical(Sys.getenv("OMP_NUM_THREADS", unset = NA_character_), old)
 })
-
-test_that("sby_select_modal_frequency usa sby_config_max_threads sem falhar", {
-  sby_config(sby_config_max_threads = 1L)
-  df <- data.frame(a = c(1,1,1,2), b = c("x","x","y","z"))
-  out <- sby_select_modal_frequency(df, threshold = 0.75)
-  expect_s3_class(out, "data.frame")
-})

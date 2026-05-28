@@ -3,19 +3,18 @@
 \alias{sby_select_modal_frequency}
 \title{Select columns by modal frequency}
 \usage{
-sby_select_modal_frequency(.data, ..., threshold)
+sby_select_modal_frequency(.data, threshold = 0.99)
 }
 \arguments{
-\item{.data}{A data frame, tibble, or matrix.}
-\item{...}{Tidyselect column selectors. If empty, all supported columns are evaluated.}
-\item{threshold}{Numeric scalar between 0 and 1. Columns are removed when the modal value ratio is greater than or equal to this value.}
+\item{.data}{A data frame-like object.}
+\item{threshold}{Numeric scalar threshold argument accepted by the public API.}
 }
 \value{
-\code{.data} with high modal-frequency columns removed.
+\code{.data} with columns retained according to the current modal-frequency implementation.
 }
 \description{
-Removes selected columns whose most frequent value appears in a proportion greater than or equal to \code{threshold}.
+Filters columns with modal-frequency logic implemented directly in \R{}.
 }
 \details{
-The native routine receives an explicit \code{max_threads} argument from \code{sby_config_max_threads} and runs inside a temporary OpenMP thread context that is restored on exit.
+This development snapshot keeps the current \code{sby_select_modal_frequency()} implementation as the source of truth and removes the previous native modal-frequency backend from the package.
 }
