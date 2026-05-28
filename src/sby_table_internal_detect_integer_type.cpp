@@ -1,3 +1,9 @@
+// [[Rcpp::plugins(cpp11)]]
+#include <Rcpp.h>
+#include <limits>
+
+using namespace Rcpp;
+
 //' @title Detect Integer Vector Metadata for Arrow Schema Optimization
 //'
 //' @description
@@ -73,6 +79,12 @@ NumericVector sby_table_internal_detect_integer_type(IntegerVector current_colum
     }
   }
   
+  // Keep deterministic placeholders when the column has only missing values
+  if(!has_value) {
+    min_value = 0;
+    max_value = 0;
+  }
+
   // Return a compact unnamed vector to reduce allocations
   return NumericVector::create(
     has_value ? 1.0 : 0.0,

@@ -20,9 +20,9 @@
 #'
 #' Integer type compaction respects the representation limits of Arrow integer
 #' types. Values \code{Inf} and \code{-Inf} prevent conversion to integer
-#' types. \code{double} values above \code{2^.Machine$double.digits} are
-#' preserved as \code{float64()}, because they no longer have a general
-#' guarantee of exact integer representation in double precision.
+#' types. Integer-like \code{double} values are compacted only within the
+#' exact-representation range (\code{2^.Machine$double.digits}); values above
+#' this bound are preserved as \code{float64()}.
 #'
 #' @param .data Object of class \code{data.frame} or \code{tibble} containing
 #' the columns to be analyzed.
