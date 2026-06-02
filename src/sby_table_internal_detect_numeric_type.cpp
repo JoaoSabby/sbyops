@@ -108,6 +108,3 @@ NumericVector sby_table_internal_detect_numeric_type(NumericVector current_colum
     max_value
   );
 }
-####
-## End
-#

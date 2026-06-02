@@ -93,6 +93,3 @@ NumericVector sby_table_internal_detect_integer_type(IntegerVector current_colum
     static_cast<double>(max_value)
   );
 }
-####
-## Fim
-#
