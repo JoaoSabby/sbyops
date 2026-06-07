@@ -19,7 +19,7 @@ Encoding: UTF-8
 Language: en-US
 NeedsCompilation: yes
 Depends: 
-    R (>= 4.0.0)
+    R (>= 4.5.0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 SystemRequirements: OpenMP, Intel oneMKL (optional)
