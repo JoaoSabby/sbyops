@@ -30,7 +30,7 @@ sby_select_modal_frequency <- function(.data, threshold = 0.99){
   # Resultado
   colResult <- lapply(
     X = .data,
-    FUN = function(col, qtdLinhas){(countOccur(col)[1, 2] / size_records)},
+    FUN = function(col, size_records){countOccur(col)[1, 2] / size_records},
     size_records = fnrow(.data)
   )
 
