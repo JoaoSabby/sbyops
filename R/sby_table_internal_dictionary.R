@@ -16,7 +16,7 @@
 #'
 #' @return Named logical vector with one decision per column.
 #'
-#' @importFrom collapse fnrow
+#' @importFrom collapse fncol fnrow
 #' @importFrom kit countNA uniqLen
 #'
 #' @keywords internal

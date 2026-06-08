@@ -38,7 +38,8 @@ test_that("thread context restaura variaveis ausentes e vazias", {
   expect_identical(Sys.getenv("OMP_NUM_THREADS", unset = NA_character_), "4")
   threadRestore(ctx)
   expect_true(is.na(Sys.getenv("OMP_NUM_THREADS", unset = NA_character_)))
-  expect_identical(Sys.getenv("MKL_NUM_THREADS", unset = NA_character_), "")
+  expected_mkl <- if(.Platform$OS.type == "windows") NA_character_ else ""
+  expect_identical(Sys.getenv("MKL_NUM_THREADS", unset = NA_character_), expected_mkl)
 })
 
 test_that("thread context restaura apos erro", {

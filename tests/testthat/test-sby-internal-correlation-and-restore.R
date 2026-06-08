@@ -21,11 +21,11 @@ test_that("helpers de correlacao retornam matriz quadrada com diagonal zerada", 
   m <- cbind(a = 1:10, b = 2 * (1:10), c = rnorm(10))
   cs <- computeStreaming(m)
   cb <- computeBlas(m)
-  cf <- computeFortran(m)
+  cf <- computeFortran(m, threshold = 0.99)
   expect_equal(dim(cs), c(3L, 3L))
-  expect_equal(diag(cs), c(0, 0, 0))
-  expect_equal(diag(cb), c(0, 0, 0))
-  expect_equal(diag(cf), c(0, 0, 0))
+  expect_equal(unname(diag(cs)), c(0, 0, 0))
+  expect_equal(unname(diag(cb)), c(0, 0, 0))
+  expect_type(cf, "character")
 })
 
 test_that("streaming e blas sao numericamente proximos em matriz pequena", {
@@ -34,9 +34,13 @@ test_that("streaming e blas sao numericamente proximos em matriz pequena", {
   expect_equal(computeStreaming(m), computeBlas(m), tolerance = 1e-10)
 })
 
-test_that("fortran e streaming sao equivalentes com NA pairwise", {
+test_that("fortran e R base sao equivalentes com NA pairwise", {
   m <- cbind(a = c(1, 2, NA, 4, 5), b = c(2, 4, NA, 8, 10), c = c(1, 0, 1, 0, 1))
-  expect_equal(computeFortran(m), computeStreaming(m), tolerance = 1e-8)
+  cor_r <- abs(cor(m, use = "pairwise.complete.obs"))
+  expect_equal(
+    computeFortran(m, threshold = 0.99),
+    applySelection(cor_r, threshold = 0.99)
+  )
 })
 
 test_that("sby_internal_apply_correlation_selection remove colunas por limiar inclusivo", {

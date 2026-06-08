@@ -106,6 +106,9 @@ sby_select_correlation <- function(.data, ..., threshold){
   selected_strategy <- sby_internal_select_correlation_strategy(
     selected_data = numeric_matrix
   )
+  if(any(!is.finite(numeric_matrix))){
+    selected_strategy <- "fortran"
+  }
 
   requested_threads <- sby_internal_get_max_threads()
   context <- sby_internal_capture_thread_context(
@@ -125,13 +128,22 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   # Dispatch correlation computation according to selected strategy
   if(selected_strategy == "fortran"){
-    correlation_matrix <- sby_internal_compute_correlation_fortran(
-      numeric_matrix = numeric_matrix
+    removed_columns <- sby_internal_compute_correlation_fortran(
+      numeric_matrix = numeric_matrix,
+      threshold = threshold
     )
   } else if(selected_strategy == "blas"){
     correlation_matrix <- sby_internal_compute_correlation_blas(mat = numeric_matrix)
+    removed_columns <- sby_internal_apply_correlation_selection(
+      cor_mat = correlation_matrix,
+      threshold = threshold
+    )
   } else {
     correlation_matrix <- sby_internal_compute_correlation_streaming(mat = numeric_matrix)
+    removed_columns <- sby_internal_apply_correlation_selection(
+      cor_mat = correlation_matrix,
+      threshold = threshold
+    )
   }
 
   # Compose concise execution message with backend and thread details
@@ -147,11 +159,7 @@ sby_select_correlation <- function(.data, ..., threshold){
     )
   )
 
-  # Apply iterative correlation pruning using computed matrix
-  removed_columns <- sby_internal_apply_correlation_selection(
-    cor_mat = correlation_matrix,
-    threshold = threshold
-  )
+
 
   # Build filtered dataset after removing selected correlated columns
   kept_columns <- setdiff(colnames(.data), removed_columns)

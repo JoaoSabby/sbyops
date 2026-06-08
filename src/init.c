@@ -3,7 +3,7 @@
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
 
-extern SEXP sby_correlation_pearson_matrix_fortran(SEXP matrix, SEXP n_rows, SEXP n_cols);
+extern SEXP sby_correlation_pearson_matrix_fortran(SEXP matrix, SEXP n_rows, SEXP n_cols, SEXP threshold);
 extern SEXP sby_non_constant_mask(SEXP cols);
 extern SEXP _sbyops_sby_table_internal_detect_integer_type(SEXP current_column);
 extern SEXP _sbyops_sby_table_internal_detect_numeric_type(SEXP current_column);
@@ -13,7 +13,7 @@ extern SEXP _sbyops_sby_table_internal_detect_numeric_type(SEXP current_column);
  * @description Centraliza registro para chamadas .Call com validacao de assinatura
  */
 static const R_CallMethodDef CallEntries[] = {
-  {"sby_correlation_pearson_matrix_fortran", (DL_FUNC) &sby_correlation_pearson_matrix_fortran, 3},
+  {"sby_correlation_pearson_matrix_fortran", (DL_FUNC) &sby_correlation_pearson_matrix_fortran, 4},
   {"sby_non_constant_mask", (DL_FUNC) &sby_non_constant_mask, 1},
   {"_sbyops_sby_table_internal_detect_integer_type", (DL_FUNC) &_sbyops_sby_table_internal_detect_integer_type, 1},
   {"_sbyops_sby_table_internal_detect_numeric_type", (DL_FUNC) &_sbyops_sby_table_internal_detect_numeric_type, 1},

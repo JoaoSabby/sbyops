@@ -21,7 +21,6 @@ NeedsCompilation: yes
 Depends: 
     R (>= 4.5.0)
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
 SystemRequirements: OpenMP, Intel oneMKL (optional)
 URL: https://github.com/JoaoSabby/sbyops
 BugReports: https://github.com/JoaoSabby/sbyops/issues
@@ -40,3 +39,4 @@ Suggests:
     tibble,
     RhpcBLASctl
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

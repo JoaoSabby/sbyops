@@ -93,8 +93,8 @@ sby_internal_apply_correlation_selection <- function(cor_mat, threshold){
     max_pair_table <- max_pair_table[max_pair_table$Freq, , drop = FALSE]
 
     # Select the first deterministic tied pair for reproducibility
-    pair_row <- as.integer(as.character(max_pair_table$Var1[1L]))
-    pair_col <- as.integer(as.character(max_pair_table$Var2[1L]))
+    pair_row <- as.integer(max_pair_table$Var1[1L])
+    pair_col <- as.integer(max_pair_table$Var2[1L])
 
     # Map pair coordinates back to original matrix column indexes
     first_index <- active_indexes[pair_row]
