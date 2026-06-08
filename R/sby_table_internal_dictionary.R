@@ -58,7 +58,7 @@ sby_table_internal_dictionary <- function(.data){
     }
     
     # Count missing values without creating an intermediate logical vector
-    na_count <- countNA(current_column)
+    na_count <- kit::countNA(current_column)
     valid_count <- row_count - na_count
     
     # Fully missing character columns can use dictionary encoding with low cost
@@ -67,7 +67,7 @@ sby_table_internal_dictionary <- function(.data){
     }
     
     # Compute real cardinality by scanning the full column
-    distinct_count <- uniqLen(current_column)
+    distinct_count <- kit::uniqLen(current_column)
     
     # Adjust cardinality when NA was counted as a distinct value
     if(na_count > 0L){

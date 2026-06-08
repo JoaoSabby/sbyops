@@ -1,7 +1,5 @@
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
+#include <string.h>
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
@@ -97,10 +95,7 @@ SEXP sby_non_constant_mask(SEXP cols) {
   SEXP out = PROTECT(allocVector(LGLSXP, p));
   int *res = LOGICAL(out);
 
-  /* Executa em paralelo por coluna quando OpenMP estiver disponivel */
-  #ifdef _OPENMP
-  #pragma omp parallel for schedule(static)
-  #endif
+  /* Executa sequencialmente porque objetos R e ALTREP nao sao seguros para acesso via R API em regioes OpenMP */
   for (R_xlen_t j = 0; j < p; ++j) {
     /* Le coluna corrente e assume manter por padrao */
     SEXP col = VECTOR_ELT(cols, j);

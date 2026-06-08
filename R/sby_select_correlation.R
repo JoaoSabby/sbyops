@@ -36,6 +36,8 @@
 #'
 #' @seealso [sby_select_modal_frequency()], [sby_select_non_constant()], [sby_config()]
 #'
+#' @importFrom cli cli_alert_info
+#'
 #' @examples
 #' # Prepare numeric columns to evaluate pairwise correlation
 #' sample_data <- data.frame(a = 1:5, b = 2:6, c = c(1, 0, 1, 0, 1))
