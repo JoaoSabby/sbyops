@@ -1,5 +1,5 @@
 !===============================================================================
-! sby_correlation_pearson.f90
+! sby_correlation_pearson.F90
 !===============================================================================
 !
 ! Native core for absolute Pearson correlation by column pair and Jolliffe pruning.
