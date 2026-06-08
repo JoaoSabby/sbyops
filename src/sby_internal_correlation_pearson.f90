@@ -1,5 +1,5 @@
 !===============================================================================
-! sby_correlation_pearson.f90
+! sby_internal_correlation_pearson.f90
 !===============================================================================
 !
 ! Native core for absolute Pearson correlation by column pair and Jolliffe pruning.
@@ -10,7 +10,7 @@
 !
 !===============================================================================
 
-module sby_correlation_pearson_core_mod
+module sby_internal_correlation_pearson_core_mod
   use iso_c_binding
   use, intrinsic :: ieee_arithmetic
   implicit none
@@ -20,12 +20,12 @@ module sby_correlation_pearson_core_mod
 
 contains
 
-  pure logical function is_valid_double(x)
+  pure logical function sby_internal_is_valid_double(x)
     real(c_double), intent(in) :: x
-    is_valid_double = ieee_is_finite(x)
-  end function is_valid_double
+    sby_internal_is_valid_double = ieee_is_finite(x)
+  end function sby_internal_is_valid_double
 
-  pure subroutine column_mean_ss(mat, n, col, mean, ss)
+  pure subroutine sby_internal_column_mean_ss(mat, n, col, mean, ss)
     real(c_double), intent(in)  :: mat(:)
     integer(c_int), intent(in)  :: n
     integer(c_int), intent(in)  :: col
@@ -47,9 +47,9 @@ contains
       mean = mean + delta / real(row, c_double)
       ss = ss + delta * (x - mean)
     end do
-  end subroutine column_mean_ss
+  end subroutine sby_internal_column_mean_ss
 
-  pure subroutine pearson_abs_complete_pair(mat, n, col_i, col_j, means, ss_cols, corr)
+  pure subroutine sby_internal_pearson_abs_complete_pair(mat, n, col_i, col_j, means, ss_cols, corr)
     real(c_double), intent(in)  :: mat(:)
     integer(c_int), intent(in)  :: n
     integer(c_int), intent(in)  :: col_i
@@ -81,9 +81,9 @@ contains
       if (.not. ieee_is_finite(corr)) corr = 0.0_c_double
       if (corr > 1.0_c_double) corr = 1.0_c_double
     end if
-  end subroutine pearson_abs_complete_pair
+  end subroutine sby_internal_pearson_abs_complete_pair
 
-  pure subroutine pearson_abs_pairwise_pair(mat, n, col_i, col_j, corr)
+  pure subroutine sby_internal_pearson_abs_pairwise_pair(mat, n, col_i, col_j, corr)
     real(c_double), intent(in)  :: mat(:)
     integer(c_int), intent(in)  :: n
     integer(c_int), intent(in)  :: col_i
@@ -119,7 +119,7 @@ contains
       xi = mat(offset_i + row)
       xj = mat(offset_j + row)
 
-      if (is_valid_double(xi) .and. is_valid_double(xj)) then
+      if (sby_internal_is_valid_double(xi) .and. sby_internal_is_valid_double(xj)) then
         n_valid = n_valid + 1_c_int
         delta_i = xi - mean_i
         delta_j = xj - mean_j
@@ -139,16 +139,16 @@ contains
       if (.not. ieee_is_finite(corr)) corr = 0.0_c_double
       if (corr > 1.0_c_double) corr = 1.0_c_double
     end if
-  end subroutine pearson_abs_pairwise_pair
+  end subroutine sby_internal_pearson_abs_pairwise_pair
 
-end module sby_correlation_pearson_core_mod
+end module sby_internal_correlation_pearson_core_mod
 
-function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols_sexp, threshold_sexp) &
-    result(result_sexp) bind(C, name="sby_correlation_pearson_matrix_fortran")
+function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols_sexp, threshold_sexp) &
+    result(result_sexp) bind(C, name="sby_internal_correlation_pearson_matrix_fortran")
 
   use iso_c_binding
   use omp_lib
-  use sby_correlation_pearson_core_mod
+  use sby_internal_correlation_pearson_core_mod
   implicit none
 
   interface
@@ -246,7 +246,7 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
 
   all_valid = .true.
   do i = 1_c_int, n * p
-    if (.not. is_valid_double(mat(i))) then
+    if (.not. sby_internal_is_valid_double(mat(i))) then
       all_valid = .false.
       exit
     end if
@@ -259,7 +259,7 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
 
 !$omp parallel do default(none) private(j) shared(n, p, mat, means, ss_cols) schedule(static) if(use_openmp)
     do j = 1_c_int, p
-      call column_mean_ss(mat, n, j, means(j), ss_cols(j))
+      call sby_internal_column_mean_ss(mat, n, j, means(j), ss_cols(j))
     end do
 !$omp end parallel do
 
@@ -268,7 +268,7 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
     do j = 1_c_int, p
       cor_out((j - 1_c_int) * p + j) = 0.0_c_double
       do i = j + 1_c_int, p
-        call pearson_abs_complete_pair(mat, n, i, j, means, ss_cols, corr)
+        call sby_internal_pearson_abs_complete_pair(mat, n, i, j, means, ss_cols, corr)
         idx_ij = (j - 1_c_int) * p + i
         idx_ji = (i - 1_c_int) * p + j
         cor_out(idx_ij) = corr
@@ -284,7 +284,7 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
     do j = 1_c_int, p
       cor_out((j - 1_c_int) * p + j) = 0.0_c_double
       do i = j + 1_c_int, p
-        call pearson_abs_pairwise_pair(mat, n, i, j, corr)
+        call sby_internal_pearson_abs_pairwise_pair(mat, n, i, j, corr)
         idx_ij = (j - 1_c_int) * p + i
         idx_ji = (i - 1_c_int) * p + j
         cor_out(idx_ij) = corr
@@ -364,4 +364,4 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
   deallocate(active)
 
   call Rf_unprotect(1_c_int)
-end function sby_correlation_pearson_matrix_fortran
+end function sby_internal_correlation_pearson_matrix_fortran
