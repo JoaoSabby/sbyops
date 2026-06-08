@@ -26,6 +26,7 @@ URL: https://github.com/JoaoSabby/sbyops
 BugReports: https://github.com/JoaoSabby/sbyops/issues
 Imports:
     arrow,
+    cli,
     collapse,
     kit,
     Rcpp,

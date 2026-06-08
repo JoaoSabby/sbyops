@@ -5,6 +5,7 @@
 
 extern SEXP sby_correlation_pearson_matrix_fortran(SEXP matrix, SEXP n_rows, SEXP n_cols, SEXP threshold);
 extern SEXP sby_non_constant_mask(SEXP cols);
+extern SEXP sby_modal_frequency_keep_mask(SEXP cols, SEXP threshold, SEXP n_rows);
 extern SEXP _sbyops_sby_table_internal_detect_integer_type(SEXP current_column);
 extern SEXP _sbyops_sby_table_internal_detect_numeric_type(SEXP current_column);
 
@@ -15,6 +16,7 @@ extern SEXP _sbyops_sby_table_internal_detect_numeric_type(SEXP current_column);
 static const R_CallMethodDef CallEntries[] = {
   {"sby_correlation_pearson_matrix_fortran", (DL_FUNC) &sby_correlation_pearson_matrix_fortran, 4},
   {"sby_non_constant_mask", (DL_FUNC) &sby_non_constant_mask, 1},
+  {"sby_modal_frequency_keep_mask", (DL_FUNC) &sby_modal_frequency_keep_mask, 3},
   {"_sbyops_sby_table_internal_detect_integer_type", (DL_FUNC) &_sbyops_sby_table_internal_detect_integer_type, 1},
   {"_sbyops_sby_table_internal_detect_numeric_type", (DL_FUNC) &_sbyops_sby_table_internal_detect_numeric_type, 1},
   {NULL, NULL, 0}
