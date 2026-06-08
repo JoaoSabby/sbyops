@@ -11,7 +11,7 @@
  * @param x Vetor atomico sem dimensao
  * @return 1 quando a coluna e constante e 0 caso contrario
  */
-static int is_constant_atomic(SEXP x) {
+static int sby_internal_is_constant_atomic(SEXP x) {
   /* Le tamanho da coluna e sai rapido para vetores com 0 ou 1 elemento */
   R_xlen_t n = XLENGTH(x);
   if (n <= 1) return 1;
@@ -84,7 +84,7 @@ static int is_constant_atomic(SEXP x) {
  * @param cols Lista de colunas
  * @return Vetor logico com TRUE para manter e FALSE para remover
  */
-SEXP sby_non_constant_mask(SEXP cols) {
+SEXP sby_internal_non_constant_mask(SEXP cols) {
   /* Valida contrato de entrada para evitar acesso invalido de memoria */
   if (!isNewList(cols)) {
     Rf_error("`cols` must be a list.");
@@ -103,7 +103,7 @@ SEXP sby_non_constant_mask(SEXP cols) {
 
     /* So aplica regra de constancia para vetor atomico sem dimensao */
     if (isVectorAtomic(col) && isNull(getAttrib(col, R_DimSymbol))) {
-      keep = !is_constant_atomic(col);
+      keep = !sby_internal_is_constant_atomic(col);
     }
 
     /* Salva decisao da coluna no vetor de mascara */

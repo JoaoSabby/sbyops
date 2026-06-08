@@ -51,9 +51,9 @@ sby_select_modal_frequency <- function(.data, threshold = 0.99){
   column_data <- as.data.frame(.data, stringsAsFactors = FALSE)
   cutoff <- ceiling(threshold * n_rows)
 
-  # Use the native type-specialized mask; unsupported columns fall back to R
+  # Use the registered native type-specialized mask; unsupported columns fall back to R
   keep_mask <- .Call(
-    "sby_modal_frequency_keep_mask",
+    "sby_internal_modal_frequency_keep_mask",
     column_data,
     threshold,
     as.integer(n_rows),

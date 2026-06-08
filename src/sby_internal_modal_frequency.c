@@ -4,7 +4,7 @@
 #include <R.h>
 #include <Rinternals.h>
 
-static size_t sby_next_power_two(R_xlen_t n) {
+static size_t sby_internal_next_power_two(R_xlen_t n) {
   size_t cap = 16u;
   double target = (double)n * 2.0;
   while ((double)cap < target) {
@@ -16,7 +16,7 @@ static size_t sby_next_power_two(R_xlen_t n) {
   return cap;
 }
 
-static uint32_t sby_mix_u32(uint32_t x) {
+static uint32_t sby_internal_mix_u32(uint32_t x) {
   x ^= x >> 16;
   x *= 0x7feb352du;
   x ^= x >> 15;
@@ -25,7 +25,7 @@ static uint32_t sby_mix_u32(uint32_t x) {
   return x;
 }
 
-static uint32_t sby_mix_u64(uint64_t x) {
+static uint32_t sby_internal_mix_u64(uint64_t x) {
   x ^= x >> 33;
   x *= UINT64_C(0xff51afd7ed558ccd);
   x ^= x >> 33;
@@ -34,10 +34,10 @@ static uint32_t sby_mix_u64(uint64_t x) {
   return (uint32_t)(x ^ (x >> 32));
 }
 
-static int sby_modal_keep_integer(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
+static int sby_internal_modal_keep_integer(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
   if (cutoff <= 0) return 0;
 
-  size_t cap = sby_next_power_two(n);
+  size_t cap = sby_internal_next_power_two(n);
   size_t mask = cap - 1u;
   int *keys = R_Calloc(cap, int);
   R_xlen_t *counts = R_Calloc(cap, R_xlen_t);
@@ -46,7 +46,7 @@ static int sby_modal_keep_integer(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
 
   for (R_xlen_t i = 0; i < n; ++i) {
     int value = INTEGER(x)[i];
-    size_t pos = (size_t)sby_mix_u32((uint32_t)value) & mask;
+    size_t pos = (size_t)sby_internal_mix_u32((uint32_t)value) & mask;
 
     while (used[pos] && keys[pos] != value) {
       pos = (pos + 1u) & mask;
@@ -72,26 +72,26 @@ static int sby_modal_keep_integer(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
   return keep;
 }
 
-static int sby_real_equal(double a, double b) {
+static int sby_internal_real_equal(double a, double b) {
   if (R_IsNA(a) || R_IsNA(b)) return R_IsNA(a) && R_IsNA(b);
   if (R_IsNaN(a) || R_IsNaN(b)) return R_IsNaN(a) && R_IsNaN(b);
   return a == b;
 }
 
-static uint32_t sby_hash_real(double value) {
+static uint32_t sby_internal_hash_real(double value) {
   if (R_IsNA(value)) return 0x9e3779b9u;
   if (R_IsNaN(value)) return 0x85ebca6bu;
   if (value == 0.0) value = 0.0;
 
   uint64_t bits = 0u;
   memcpy(&bits, &value, sizeof(double));
-  return sby_mix_u64(bits);
+  return sby_internal_mix_u64(bits);
 }
 
-static int sby_modal_keep_real(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
+static int sby_internal_modal_keep_real(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
   if (cutoff <= 0) return 0;
 
-  size_t cap = sby_next_power_two(n);
+  size_t cap = sby_internal_next_power_two(n);
   size_t mask = cap - 1u;
   double *keys = R_Calloc(cap, double);
   R_xlen_t *counts = R_Calloc(cap, R_xlen_t);
@@ -100,9 +100,9 @@ static int sby_modal_keep_real(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
 
   for (R_xlen_t i = 0; i < n; ++i) {
     double value = REAL(x)[i];
-    size_t pos = (size_t)sby_hash_real(value) & mask;
+    size_t pos = (size_t)sby_internal_hash_real(value) & mask;
 
-    while (used[pos] && !sby_real_equal(keys[pos], value)) {
+    while (used[pos] && !sby_internal_real_equal(keys[pos], value)) {
       pos = (pos + 1u) & mask;
     }
 
@@ -126,10 +126,10 @@ static int sby_modal_keep_real(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
   return keep;
 }
 
-static int sby_modal_keep_string(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
+static int sby_internal_modal_keep_string(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
   if (cutoff <= 0) return 0;
 
-  size_t cap = sby_next_power_two(n);
+  size_t cap = sby_internal_next_power_two(n);
   size_t mask = cap - 1u;
   SEXP *keys = R_Calloc(cap, SEXP);
   R_xlen_t *counts = R_Calloc(cap, R_xlen_t);
@@ -138,7 +138,7 @@ static int sby_modal_keep_string(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
 
   for (R_xlen_t i = 0; i < n; ++i) {
     SEXP value = STRING_ELT(x, i);
-    size_t pos = (size_t)sby_mix_u64((uint64_t)(uintptr_t)value) & mask;
+    size_t pos = (size_t)sby_internal_mix_u64((uint64_t)(uintptr_t)value) & mask;
 
     while (used[pos] && keys[pos] != value) {
       pos = (pos + 1u) & mask;
@@ -164,7 +164,7 @@ static int sby_modal_keep_string(SEXP x, R_xlen_t cutoff, R_xlen_t n) {
   return keep;
 }
 
-SEXP sby_modal_frequency_keep_mask(SEXP cols, SEXP threshold_sexp, SEXP n_rows_sexp) {
+SEXP sby_internal_modal_frequency_keep_mask(SEXP cols, SEXP threshold_sexp, SEXP n_rows_sexp) {
   if (!isNewList(cols)) {
     Rf_error("`cols` must be a list.");
   }
@@ -193,13 +193,13 @@ SEXP sby_modal_frequency_keep_mask(SEXP cols, SEXP threshold_sexp, SEXP n_rows_s
     switch (TYPEOF(col)) {
     case LGLSXP:
     case INTSXP:
-      res[j] = sby_modal_keep_integer(col, cutoff, n);
+      res[j] = sby_internal_modal_keep_integer(col, cutoff, n);
       break;
     case REALSXP:
-      res[j] = sby_modal_keep_real(col, cutoff, n);
+      res[j] = sby_internal_modal_keep_real(col, cutoff, n);
       break;
     case STRSXP:
-      res[j] = sby_modal_keep_string(col, cutoff, n);
+      res[j] = sby_internal_modal_keep_string(col, cutoff, n);
       break;
     default:
       res[j] = NA_LOGICAL;
