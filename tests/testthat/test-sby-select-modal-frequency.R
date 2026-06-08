@@ -14,8 +14,11 @@ test_that("implementation no longer references removed modal-frequency backend",
 
 test_that("sby_select_modal_frequency does not depend on modal-frequency native symbol lookup", {
   code <- paste(readLines(testPath("..", "..", "R", "sby_select_modal_frequency.R")), collapse = "\n")
+  init_code <- paste(readLines(testPath("..", "..", "src", "init.c")), collapse = "\n")
 
   expect_false(grepl('"sby_internal_modal_frequency_keep_mask"', code, fixed = TRUE))
+  expect_false(grepl('"sby_internal_modal_frequency_keep_mask"', init_code, fixed = TRUE))
+  expect_false(file.exists(testPath("..", "..", "src", "sby_internal_modal_frequency.c")))
   expect_false(grepl(".Call", code, fixed = TRUE))
   expect_true(grepl("kit::countOccur", code, fixed = TRUE))
 })
