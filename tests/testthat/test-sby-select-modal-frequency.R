@@ -12,14 +12,27 @@ test_that("implementation no longer references removed modal-frequency backend",
   expect_false(grepl("sby_modal_frequency_codes_fortran", code, fixed = TRUE))
 })
 
-test_that("sby_select_modal_frequency uses the registered internal native symbol", {
+test_that("sby_select_modal_frequency does not depend on modal-frequency native symbol lookup", {
   code <- paste(readLines(testPath("..", "..", "R", "sby_select_modal_frequency.R")), collapse = "\n")
-  init_code <- paste(readLines(testPath("..", "..", "src", "init.c")), collapse = "\n")
 
-  expect_true(grepl('"sby_internal_modal_frequency_keep_mask"', code, fixed = TRUE))
-  expect_true(grepl('"sby_internal_modal_frequency_keep_mask"', init_code, fixed = TRUE))
-  expect_true(grepl('PACKAGE = "sbyops"', code, fixed = TRUE))
-  expect_false(grepl("getDLLRegisteredRoutines", code, fixed = TRUE))
+  expect_false(grepl('"sby_internal_modal_frequency_keep_mask"', code, fixed = TRUE))
+  expect_false(grepl(".Call", code, fixed = TRUE))
+  expect_true(grepl("kit::countOccur", code, fixed = TRUE))
+})
+
+test_that("sby_select_modal_frequency removes columns at or above modal threshold", {
+  modal_data <- data.frame(
+    remove_me = c("a", "a", "a", "b"),
+    keep_me = c("a", "b", "c", "d"),
+    stringsAsFactors = FALSE
+  )
+
+  filtered_data <- sby_select_modal_frequency(
+    .data = modal_data,
+    threshold = 0.75
+  )
+
+  expect_identical(names(filtered_data), "keep_me")
 })
 
 test_that("Fortran sources use lowercase extensions only", {

@@ -8,7 +8,7 @@
 #'
 #' @description Remove selected columns whose most frequent value proportion is greater than or equal to a threshold
 #'
-#' @details Uses a native type-specialized backend for logical, integer/factor, numeric, and character columns.
+#' @details Uses a direct R backend based on occurrence counts to avoid native symbol availability failures.
 #'
 #' @param .data A data frame or tibble
 #'
@@ -34,7 +34,7 @@ sby_select_modal_frequency <- function(.data, threshold = 0.99){
     arg_name = "threshold"
   )
 
-  # Cache dimensions once because they are reused by both R and native paths
+  # Cache dimensions once because they are reused by validation and filtering
   n_cols <- collapse::fncol(.data)
   n_rows <- collapse::fnrow(.data)
 
@@ -47,39 +47,26 @@ sby_select_modal_frequency <- function(.data, threshold = 0.99){
   resolved_names <- sby_internal_resolve_column_names(.data = .data)
   colnames(.data) <- resolved_names
 
-  # Materialize a plain column list once before dispatching to the fast backend
+  # Materialize a plain column list once before computing modal frequencies
   column_data <- as.data.frame(.data, stringsAsFactors = FALSE)
   cutoff <- ceiling(threshold * n_rows)
+  count_occur <- kit::countOccur
 
-  # Use the registered native type-specialized mask; unsupported columns fall back to R
-  keep_mask <- .Call(
-    "sby_internal_modal_frequency_keep_mask",
-    column_data,
-    threshold,
-    as.integer(n_rows),
-    PACKAGE = "sbyops"
+  # Compute the keep mask entirely in R so execution never depends on native symbol availability
+  keep_mask <- vapply(
+    X = column_data,
+    FUN = function(current_column){
+      occurrence_table <- count_occur(current_column)
+
+      if(nrow(occurrence_table) == 0L){
+        return(TRUE)
+      }
+
+      max_count <- max(as.numeric(occurrence_table[, 2L]), na.rm = TRUE)
+      max_count < cutoff
+    },
+    FUN.VALUE = logical(1L)
   )
-
-  # Fallback for unsupported atomic/list-like columns keeps exact current semantics
-  fallback_columns <- which(is.na(keep_mask))
-  if(length(fallback_columns) > 0L){
-    count_occur <- kit::countOccur
-
-    keep_mask[fallback_columns] <- vapply(
-      X = column_data[fallback_columns],
-      FUN = function(current_column){
-        occurrence_table <- count_occur(current_column)
-
-        if(nrow(occurrence_table) == 0L){
-          return(TRUE)
-        }
-
-        max_count <- max(as.numeric(occurrence_table[, 2L]), na.rm = TRUE)
-        max_count < cutoff
-      },
-      FUN.VALUE = logical(1L)
-    )
-  }
 
   # Remove columns whose modal proportion reaches or exceeds the threshold
   kept_columns <- names(column_data)[keep_mask]
