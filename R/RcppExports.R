@@ -29,13 +29,13 @@
 #'
 #' @return Numeric vector with four positions.
 #'
-#' @usage sby_table_internal_detect_integer_type(current_column)
+#' @usage sby_internal_table_detect_integer_type(current_column)
 #'
 #' @keywords internal
 NULL
 
-sby_table_internal_detect_integer_type <- function(current_column) {
-    .Call(`_sbyops_sby_table_internal_detect_integer_type`, current_column)
+sby_internal_table_detect_integer_type <- function(current_column) {
+    .Call(`_sbyops_sby_internal_table_detect_integer_type`, current_column)
 }
 
 #' @title Detect Numeric Vector Metadata for Arrow Schema Optimization
@@ -81,7 +81,7 @@ NULL
 #'
 NULL
 
-sby_table_internal_detect_numeric_type <- function(current_column) {
-    .Call(`_sbyops_sby_table_internal_detect_numeric_type`, current_column)
+sby_internal_table_detect_numeric_type <- function(current_column) {
+    .Call(`_sbyops_sby_internal_table_detect_numeric_type`, current_column)
 }
 

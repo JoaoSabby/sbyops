@@ -17,7 +17,7 @@ sby_internal_compute_correlation_fortran <- function(numeric_matrix, threshold){
 
   # Delegate matrix correlation calculation and pruning to native Fortran backend
   keep_logical <- .Call(
-    "sby_correlation_pearson_matrix_fortran",
+    "sby_internal_correlation_pearson_matrix_fortran",
     numeric_matrix,
     as.integer(fnrow(numeric_matrix)),
     as.integer(fncol(numeric_matrix)),

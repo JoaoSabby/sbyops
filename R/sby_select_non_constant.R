@@ -43,7 +43,7 @@ sby_select_non_constant <- function(.data, ...){
   selectedList <- as.list(as.data.frame(selectedData, stringsAsFactors = FALSE))
 
   keepMask <- .Call(
-    "sby_non_constant_mask",
+    "sby_internal_non_constant_mask",
     selectedList,
     PACKAGE = "sbyops"
   )

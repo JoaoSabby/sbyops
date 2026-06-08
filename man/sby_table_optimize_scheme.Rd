@@ -24,11 +24,11 @@ to \code{utf8()}, factors to \code{dictionary()}, and dates to
 \code{date32()}.
 
 For \code{double} columns, the function uses
-\code{sby_table_internal_detect_numeric_type()}, implemented in C++ through
+\code{sby_internal_table_detect_numeric_type()}, implemented in C++ through
 Rcpp, to collect metadata in a single pass.
 
 For integer columns, the function uses
-\code{sby_table_internal_detect_integer_type()}, also implemented in C++,
+\code{sby_internal_table_detect_integer_type()}, also implemented in C++,
 to avoid separate calls for minimum, maximum, and boolean feasibility checks.
 
 Integer type compaction respects the representation limits of Arrow integer

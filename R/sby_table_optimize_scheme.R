@@ -11,11 +11,11 @@
 #' \code{date32()}.
 #'
 #' For \code{double} columns, the function uses
-#' \code{sby_table_internal_detect_numeric_type()}, implemented in C++ through
+#' \code{sby_internal_table_detect_numeric_type()}, implemented in C++ through
 #' Rcpp, to collect metadata in a single pass.
 #'
 #' For integer columns, the function uses
-#' \code{sby_table_internal_detect_integer_type()}, also implemented in C++,
+#' \code{sby_internal_table_detect_integer_type()}, also implemented in C++,
 #' to avoid separate calls for minimum, maximum, and boolean feasibility checks.
 #'
 #' Integer type compaction respects the representation limits of Arrow integer
@@ -98,7 +98,7 @@ sby_table_optimize_scheme <- function(.data){
     
     # Native integer vectors are evaluated by a C routine
     if(base_type == "integer"){
-      integer_metadata <- sby_table_internal_detect_integer_type(current_column)
+      integer_metadata <- sby_internal_table_detect_integer_type(current_column)
       
       has_value <- integer_metadata[[1L]] == 1
       is_boolean <- integer_metadata[[2L]] == 1
@@ -142,7 +142,7 @@ sby_table_optimize_scheme <- function(.data){
     
     # Double vectors require complete metadata before compaction
     if(base_type == "double"){
-      numeric_metadata <- sby_table_internal_detect_numeric_type(current_column)
+      numeric_metadata <- sby_internal_table_detect_numeric_type(current_column)
       
       has_value <- numeric_metadata[[1L]] == 1
       has_non_finite <- numeric_metadata[[2L]] == 1

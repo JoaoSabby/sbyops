@@ -14,7 +14,7 @@
 #' @return Numeric value with the approximate average row width in bytes.
 #'
 #' @keywords internal
-sby_table_internal_row_width <- function(.data){
+sby_internal_table_row_width <- function(.data){
   
   # Obtain the number of rows with a fast collapse function
   row_count <- fnrow(.data)

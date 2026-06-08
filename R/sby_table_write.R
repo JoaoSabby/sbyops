@@ -51,7 +51,7 @@ sby_table_write <- function(.data, file){
   }
   
   # Normalize the output file extension
-  file <- sby_table_internal_normalize_file(file)
+  file <- sby_internal_table_normalize_file(file)
   
   # Create the destination directory when needed
   file_dir <- dirname(file)
@@ -69,9 +69,9 @@ sby_table_write <- function(.data, file){
   schema_arrow <- sby_table_optimize_scheme(.data)
   
   # Define internal writing parameters
-  compression <- sby_table_internal_compression()
-  use_dictionary <- sby_table_internal_dictionary(.data)
-  chunk_size <- sby_table_internal_chunk_size(.data)
+  compression <- sby_internal_table_compression()
+  use_dictionary <- sby_internal_table_dictionary(.data)
+  chunk_size <- sby_internal_table_chunk_size(.data)
   data_page_size <- getOption("sby_parquet_data_page_size", 2097152L)
   parquet_version <- getOption("sby_parquet_version", "2.6")
   write_statistics <- TRUE
