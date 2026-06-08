@@ -32,12 +32,12 @@ using namespace Rcpp;
 //'
 //' @return Numeric vector with four positions.
 //'
-//' @usage sby_table_internal_detect_integer_type(current_column)
+//' @usage sby_internal_table_detect_integer_type(current_column)
 //'
 //' @keywords internal
 
 // [[Rcpp::export]]
-NumericVector sby_table_internal_detect_integer_type(IntegerVector current_column) {
+NumericVector sby_internal_table_detect_integer_type(IntegerVector current_column) {
   
   // Use R_xlen_t to support long R vectors
   const R_xlen_t vector_size = current_column.size();

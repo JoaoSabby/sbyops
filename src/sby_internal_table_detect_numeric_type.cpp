@@ -30,7 +30,7 @@
 //'
   //' @return Numeric vector with six positions.
 //'
-  //' @usage sby_table_internal_detect_numeric_type(current_column)
+  //' @usage sby_internal_table_detect_numeric_type(current_column)
 //'
   //' @keywords internal
 
@@ -41,7 +41,7 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-NumericVector sby_table_internal_detect_numeric_type(NumericVector current_column) {
+NumericVector sby_internal_table_detect_numeric_type(NumericVector current_column) {
 
   // Use R_xlen_t to support long R vectors
   const R_xlen_t vector_size = current_column.size();

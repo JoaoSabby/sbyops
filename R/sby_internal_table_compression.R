@@ -16,7 +16,7 @@
 #' @importFrom arrow codec_is_available
 #'
 #' @keywords internal
-sby_table_internal_compression <- function(){
+sby_internal_table_compression <- function(){
   
   # Obtain the codec defined by an advanced user
   compression <- getOption("sby_parquet_compression", NULL)

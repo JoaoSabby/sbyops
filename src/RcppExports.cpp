@@ -10,25 +10,25 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// sby_table_internal_detect_integer_type
-NumericVector sby_table_internal_detect_integer_type(IntegerVector current_column);
-RcppExport SEXP _sbyops_sby_table_internal_detect_integer_type(SEXP current_columnSEXP) {
+// sby_internal_table_detect_integer_type
+NumericVector sby_internal_table_detect_integer_type(IntegerVector current_column);
+RcppExport SEXP _sbyops_sby_internal_table_detect_integer_type(SEXP current_columnSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerVector >::type current_column(current_columnSEXP);
-    rcpp_result_gen = Rcpp::wrap(sby_table_internal_detect_integer_type(current_column));
+    rcpp_result_gen = Rcpp::wrap(sby_internal_table_detect_integer_type(current_column));
     return rcpp_result_gen;
 END_RCPP
 }
-// sby_table_internal_detect_numeric_type
-NumericVector sby_table_internal_detect_numeric_type(NumericVector current_column);
-RcppExport SEXP _sbyops_sby_table_internal_detect_numeric_type(SEXP current_columnSEXP) {
+// sby_internal_table_detect_numeric_type
+NumericVector sby_internal_table_detect_numeric_type(NumericVector current_column);
+RcppExport SEXP _sbyops_sby_internal_table_detect_numeric_type(SEXP current_columnSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type current_column(current_columnSEXP);
-    rcpp_result_gen = Rcpp::wrap(sby_table_internal_detect_numeric_type(current_column));
+    rcpp_result_gen = Rcpp::wrap(sby_internal_table_detect_numeric_type(current_column));
     return rcpp_result_gen;
 END_RCPP
 }

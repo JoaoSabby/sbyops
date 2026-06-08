@@ -17,7 +17,7 @@
 #' @return Integer with the number of rows per row group.
 #'
 #' @keywords internal
-sby_table_internal_chunk_size <- function(.data){
+sby_internal_table_chunk_size <- function(.data){
   
   # Obtain the number of rows with a fast collapse function
   row_count <- fnrow(.data)
@@ -28,7 +28,7 @@ sby_table_internal_chunk_size <- function(.data){
   }
   
   # Estimate average row width
-  row_width <- sby_table_internal_row_width(.data)
+  row_width <- sby_internal_table_row_width(.data)
   
   # Define the target number of bytes per row group through an internal option
   target_row_group_bytes <- getOption("sby_parquet_row_group_bytes", 536870912)
