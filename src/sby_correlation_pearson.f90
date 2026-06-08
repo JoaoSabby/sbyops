@@ -1,5 +1,5 @@
 !===============================================================================
-! sby_correlation_pearson.F90
+! sby_correlation_pearson.f90
 !===============================================================================
 !
 ! Native core for absolute Pearson correlation by column pair and Jolliffe pruning.
@@ -149,10 +149,6 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
   use iso_c_binding
   use omp_lib
   use sby_correlation_pearson_core_mod
-#ifdef SBYOPS_ONEAPI_MKL
-  use mkl_vsl_type
-  use mkl_vsl
-#endif
   implicit none
 
   interface
@@ -185,7 +181,7 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
       use iso_c_binding
       integer(c_int), value :: n
     end subroutine Rf_unprotect
-    
+
     function LOGICAL(x) bind(C, name="LOGICAL") result(p)
       use iso_c_binding
       type(c_ptr), value :: x
@@ -207,18 +203,9 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
 
   real(c_double), allocatable :: cor_out(:)
   real(c_double) :: threshold
-
-#ifdef SBYOPS_ONEAPI_MKL
-  type(VSL_SS_TASK) :: task
-  integer :: status
-  real(c_double), allocatable :: means(:)
-  real(c_double), allocatable :: cov_out(:)
-  integer, allocatable :: indices(:)
-#else
   real(c_double), allocatable :: means(:)
   real(c_double), allocatable :: ss_cols(:)
   real(c_double) :: corr
-#endif
 
   integer(c_int) :: n
   integer(c_int) :: p
@@ -268,39 +255,6 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
   allocate(cor_out(p * p))
 
   if (all_valid) then
-#ifdef SBYOPS_ONEAPI_MKL
-    allocate(means(p), cov_out(p * p), indices(p))
-    do i = 1, p
-      indices(i) = i
-    end do
-    
-    ! Create Summary Statistics task
-    status = vsldssnewtask(task, p, n, VSL_SS_MATRIX_STORAGE_COLS, mat, 0, indices)
-    ! Edit task for correlation
-    status = vsldsseditcovcor(task, means, cov_out, VSL_SS_MATRIX_STORAGE_FULL, cor_out, VSL_SS_MATRIX_STORAGE_FULL)
-    ! Compute correlation
-    status = vsldsscompute(task, VSL_SS_COR, VSL_SS_METHOD_FAST)
-    ! Delete task
-    status = vsldeletetask(task)
-
-    ! Compute absolute correlation and handle diagonal/validity
-!$omp parallel do default(none) private(i) shared(p, cor_out) schedule(static) if(use_openmp)
-    do i = 1, p * p
-      cor_out(i) = abs(cor_out(i))
-      if (.not. ieee_is_finite(cor_out(i))) cor_out(i) = 0.0_c_double
-      if (cor_out(i) > 1.0_c_double) cor_out(i) = 1.0_c_double
-    end do
-!$omp end parallel do
-
-    ! Set diagonal to zero for tie-breaking safety
-!$omp parallel do default(none) private(i) shared(p, cor_out) schedule(static) if(use_openmp)
-    do i = 1, p
-      cor_out((i - 1_c_int)*p + i) = 0.0_c_double
-    end do
-!$omp end parallel do
-
-    deallocate(means, cov_out, indices)
-#else
     allocate(means(p), ss_cols(p))
 
 !$omp parallel do default(none) private(j) shared(n, p, mat, means, ss_cols) schedule(static) if(use_openmp)
@@ -324,7 +278,6 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
 !$omp end parallel do
 
     deallocate(means, ss_cols)
-#endif
   else
 !$omp parallel do default(none) private(i, j, idx_ij, idx_ji, corr) &
 !$omp shared(n, p, mat, cor_out) schedule(dynamic,32) if(use_openmp)
@@ -354,7 +307,7 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
     max_val = -1.0_c_double
     best_i = -1_c_int
     best_j = -1_c_int
-    
+
     ! Find maximum pairwise correlation
     ! Breaking ties: R finds the *first* max sequentially.
     ! Traversing column by column (j outer, i inner) over upper triangle (i < j).
@@ -362,7 +315,7 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
       if (.not. active(j)) cycle
       do i = 1_c_int, j - 1_c_int
         if (.not. active(i)) cycle
-        
+
         current_val = cor_out((j - 1_c_int) * p + i)
         if (current_val > max_val) then
           max_val = current_val
@@ -371,14 +324,14 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
         end if
       end do
     end do
-    
+
     if (max_val < threshold .or. best_i == -1_c_int) then
       exit
     end if
-    
+
     sum_i = 0.0_c_double
     sum_j = 0.0_c_double
-    
+
     do k = 1_c_int, p
       if (active(k) .and. k /= best_i) then
         sum_i = sum_i + cor_out((k - 1_c_int) * p + best_i)
@@ -387,13 +340,13 @@ function sby_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols
         sum_j = sum_j + cor_out((k - 1_c_int) * p + best_j)
       end if
     end do
-    
+
     if (sum_i >= sum_j) then
       remove_index = best_i
     else
       remove_index = best_j
     end if
-    
+
     active(remove_index) = .false.
     num_active = num_active - 1_c_int
   end do
