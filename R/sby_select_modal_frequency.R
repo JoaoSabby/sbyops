@@ -56,7 +56,8 @@ sby_select_modal_frequency <- function(.data, threshold = 0.99){
     "sby_modal_frequency_keep_mask",
     column_data,
     threshold,
-    as.integer(n_rows)
+    as.integer(n_rows),
+    PACKAGE = "sbyops"
   )
 
   # Fallback for unsupported atomic/list-like columns keeps exact current semantics
