@@ -1,7 +1,7 @@
-threadCapture <- getFromNamespace("sby_internal_capture_thread_context", "sbyops")
-threadApply <- getFromNamespace("sby_internal_apply_thread_context", "sbyops")
-threadRestore <- getFromNamespace("sby_internal_restore_thread_context", "sbyops")
-threadWith <- getFromNamespace("sby_internal_with_thread_context", "sbyops")
+thread_capture <- getFromNamespace("sby_internal_capture_thread_context", "sbyops")
+thread_apply <- getFromNamespace("sby_internal_apply_thread_context", "sbyops")
+thread_restore <- getFromNamespace("sby_internal_restore_thread_context", "sbyops")
+thread_with <- getFromNamespace("sby_internal_with_thread_context", "sbyops")
 
 local_env_state <- function(key, value){
   old <- Sys.getenv(key, unset = NA_character_)
@@ -20,23 +20,23 @@ test_that("sby_config valida sby_config_max_threads", {
 })
 
 test_that("thread context restaura variaveis ausentes e vazias", {
-  oldOmp <- Sys.getenv("OMP_NUM_THREADS", unset = NA_character_)
-  oldMkl <- Sys.getenv("MKL_NUM_THREADS", unset = NA_character_)
-  oldOpenblas <- Sys.getenv("OPENBLAS_NUM_THREADS", unset = NA_character_)
-  oldBlis <- Sys.getenv("BLIS_NUM_THREADS", unset = NA_character_)
+  old_omp <- Sys.getenv("OMP_NUM_THREADS", unset = NA_character_)
+  old_mkl <- Sys.getenv("MKL_NUM_THREADS", unset = NA_character_)
+  old_openblas <- Sys.getenv("OPENBLAS_NUM_THREADS", unset = NA_character_)
+  old_blis <- Sys.getenv("BLIS_NUM_THREADS", unset = NA_character_)
   on.exit({
-    if(is.na(oldOmp)) Sys.unsetenv("OMP_NUM_THREADS") else Sys.setenv(OMP_NUM_THREADS = oldOmp)
-    if(is.na(oldMkl)) Sys.unsetenv("MKL_NUM_THREADS") else Sys.setenv(MKL_NUM_THREADS = oldMkl)
-    if(is.na(oldOpenblas)) Sys.unsetenv("OPENBLAS_NUM_THREADS") else Sys.setenv(OPENBLAS_NUM_THREADS = oldOpenblas)
-    if(is.na(oldBlis)) Sys.unsetenv("BLIS_NUM_THREADS") else Sys.setenv(BLIS_NUM_THREADS = oldBlis)
+    if(is.na(old_omp)) Sys.unsetenv("OMP_NUM_THREADS") else Sys.setenv(OMP_NUM_THREADS = old_omp)
+    if(is.na(old_mkl)) Sys.unsetenv("MKL_NUM_THREADS") else Sys.setenv(MKL_NUM_THREADS = old_mkl)
+    if(is.na(old_openblas)) Sys.unsetenv("OPENBLAS_NUM_THREADS") else Sys.setenv(OPENBLAS_NUM_THREADS = old_openblas)
+    if(is.na(old_blis)) Sys.unsetenv("BLIS_NUM_THREADS") else Sys.setenv(BLIS_NUM_THREADS = old_blis)
   }, add = TRUE)
 
   Sys.unsetenv("OMP_NUM_THREADS")
   Sys.setenv(MKL_NUM_THREADS = "")
-  ctx <- threadCapture()
-  threadApply(4L, ctx)
+  ctx <- thread_capture()
+  thread_apply(4L, ctx)
   expect_identical(Sys.getenv("OMP_NUM_THREADS", unset = NA_character_), "4")
-  threadRestore(ctx)
+  thread_restore(ctx)
   expect_true(is.na(Sys.getenv("OMP_NUM_THREADS", unset = NA_character_)))
   expected_mkl <- if(.Platform$OS.type == "windows") NA_character_ else ""
   expect_identical(Sys.getenv("MKL_NUM_THREADS", unset = NA_character_), expected_mkl)
@@ -44,14 +44,14 @@ test_that("thread context restaura variaveis ausentes e vazias", {
 
 test_that("thread context restaura apos erro", {
   old <- Sys.getenv("OMP_NUM_THREADS", unset = NA_character_)
-  expect_error(threadWith(stop("boom"), maxThreads = 2L), "boom")
+  expect_error(thread_with(stop("boom"), max_threads = 2L), "boom")
   expect_identical(Sys.getenv("OMP_NUM_THREADS", unset = NA_character_), old)
 })
 
 test_that("options mc.cores e Ncpus sao restauradas", {
   old <- options(mc.cores = 7L, Ncpus = 7L)
   on.exit(options(old), add = TRUE)
-  threadWith(invisible(NULL), maxThreads = 2L)
+  thread_with(invisible(NULL), max_threads = 2L)
   expect_identical(getOption("mc.cores"), 7L)
   expect_identical(getOption("Ncpus"), 7L)
 })
