@@ -16,8 +16,8 @@
 #' @seealso [sby_select_correlation()], [sby_select_modal_frequency()]
 #'
 #' @examples
-#' constant_data <- data.frame(a = c(1, 1, 1), b = c(1, 2, 3))
-#' sby_select_non_constant(constant_data)
+#' constantData <- data.frame(a = c(1, 1, 1), b = c(1, 2, 3))
+#' sby_select_non_constant(constantData)
 #' @export
 sby_select_non_constant <- function(.data, ...){
 
@@ -27,32 +27,32 @@ sby_select_non_constant <- function(.data, ...){
     return(.data)
   }
 
-  resolved_names <- sby_internal_resolve_column_names(.data = .data)
-  colnames(.data) <- resolved_names
+  resolvedNames <- sby_internal_resolve_column_names(.data = .data)
+  colnames(.data) <- resolvedNames
 
-  selected_columns <- sby_internal_eval_select(
+  selectedColumns <- sby_internal_eval_select(
     .data = .data,
     ...,
     default = "all"
   )
-  if(length(selected_columns) == 0L){
+  if(length(selectedColumns) == 0L){
     return(.data)
   }
 
-  selected_data <- .data[, unname(selected_columns), drop = FALSE]
-  selected_list <- as.list(as.data.frame(selected_data, stringsAsFactors = FALSE))
+  selectedData <- .data[, unname(selectedColumns), drop = FALSE]
+  selectedList <- as.list(as.data.frame(selectedData, stringsAsFactors = FALSE))
 
-  keep_mask <- .Call(
+  keepMask <- .Call(
     "sby_internal_non_constant_mask",
-    selected_list,
+    selectedList,
     PACKAGE = "sbyops"
   )
-  removed_columns <- colnames(selected_data)[!keep_mask]
-  kept_columns <- setdiff(colnames(.data), removed_columns)
-  filtered_data <- .data[, kept_columns, drop = FALSE]
+  removedColumns <- colnames(selectedData)[!keepMask]
+  keptColumns <- setdiff(colnames(.data), removedColumns)
+  filteredData <- .data[, keptColumns, drop = FALSE]
 
   sby_internal_restore_selected_data(
-    selected_data = filtered_data,
+    selected_data = filteredData,
     original = .data
   )
 }

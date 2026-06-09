@@ -12,7 +12,7 @@ extern SEXP _sbyops_sby_internal_table_detect_numeric_type(SEXP current_column);
  * @title Tabela de rotinas nativas expostas ao R
  * @description Centraliza registro para chamadas .Call com validacao de assinatura
  */
-static const R_CallMethodDef call_entries[] = {
+static const R_CallMethodDef CallEntries[] = {
   {"sby_internal_correlation_pearson_matrix_fortran", (DL_FUNC) &sby_internal_correlation_pearson_matrix_fortran, 4},
   {"sby_internal_non_constant_mask", (DL_FUNC) &sby_internal_non_constant_mask, 1},
   {"_sbyops_sby_internal_table_detect_integer_type", (DL_FUNC) &_sbyops_sby_internal_table_detect_integer_type, 1},
@@ -26,6 +26,6 @@ static const R_CallMethodDef call_entries[] = {
  * @param dll Ponteiro para metadados da DLL carregada pelo R
  */
 void R_init_sbyops(DllInfo *dll) {
-  R_registerRoutines(dll, NULL, call_entries, NULL, NULL);
+  R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
   R_useDynamicSymbols(dll, FALSE);
 }
