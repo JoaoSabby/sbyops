@@ -70,6 +70,30 @@ test_that("sby_select_modal_frequency supports tidyselect exclusion", {
   expect_identical(names(filtered_data), c("excluded_modal", "keep_me"))
 })
 
+test_that("sby_select_modal_frequency validates column types only after tidyselect", {
+  modal_data <- data.frame(
+    TARGET = c("a", "b", "c", "d"),
+    colunasId = c("id1", "id2", "id3", "id4"),
+    selected_modal = c(9L, 9L, 9L, 8L),
+    keep_me = c(1L, 2L, 3L, 4L)
+  )
+
+  filtered_data <- sby_select_modal_frequency(
+    .data = modal_data,
+    -TARGET,
+    -colunasId,
+    threshold = 0.75
+  )
+
+  expect_identical(names(filtered_data), c("TARGET", "colunasId", "keep_me"))
+
+  expect_error(
+    sby_select_modal_frequency(.data = modal_data, TARGET, threshold = 0.75),
+    "`.data` must contain only integer or double columns",
+    fixed = TRUE
+  )
+})
+
 test_that("Fortran sources use lowercase extensions only", {
   package_files <- list.files(testPath("..", ".."), recursive = TRUE, all.files = FALSE, full.names = FALSE)
   fortran_files <- package_files[grepl("\\.[Ff](90|95|03|08)?$", package_files)]

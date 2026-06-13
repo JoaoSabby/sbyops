@@ -59,7 +59,7 @@ sby_select_correlation <- function(.data, ..., threshold){
   )
 
   # Return unchanged input when no rows or columns are available
-  if(fncol(.data) == 0L || fnrow(.data) == 0L){
+  if(collapse::fncol(.data) == 0L || collapse::fnrow(.data) == 0L){
 
     # Return input unchanged for empty tabular shapes
     return(.data)
@@ -85,6 +85,10 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   # Filter selected data and keep only numeric vectors
   selected_data <- .data[, unname(selected_columns), drop = FALSE]
+  sby_internal_validate_tabular_input(
+    .data = selected_data,
+    validate_column_types = TRUE
+  )
   numeric_mask <- vapply(
     X = as.data.frame(selected_data),
     FUN = sby_internal_is_numeric_column,
