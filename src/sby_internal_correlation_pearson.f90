@@ -148,11 +148,11 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
   logical        :: all_valid
 
   ! ---- REAL*4 working arrays (all_valid path) ----
-  real(c_float),  allocatable :: mat_f(:)       ! n*p column-major REAL*4 copy
-  real(c_float),  allocatable :: means_f(:)     ! column means REAL*4
-  real(c_float),  allocatable :: ss_f(:)        ! column sum-of-squares REAL*4
-  real(c_float),  allocatable :: xtx_f(:)       ! p*p upper-tri from ssyrk
-  real(c_float),  allocatable :: cor_f(:)       ! p*p absolute correlation REAL*4
+  real(c_float),  allocatable :: mat_f(:)
+  real(c_float),  allocatable :: means_f(:)
+  real(c_float),  allocatable :: ss_f(:)
+  real(c_float),  allocatable :: xtx_f(:)
+  real(c_float),  allocatable :: cor_f(:)
   real(c_float)  :: denom_f, corr_f, threshold_f
   real(c_float)  :: max_val_f, current_val_f, sum_i_f, sum_j_f
 
@@ -173,10 +173,10 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
   call c_f_pointer(INTEGER(n_cols_sexp), n_cols_ptr, [1])
   call c_f_pointer(R_REAL(threshold_sexp), threshold_ptr, [1])
 
-  n         = n_rows_ptr(1)
-  p         = n_cols_ptr(1)
-  threshold = threshold_ptr(1)
-  n_pairs   = (p * (p - 1_c_int)) / 2_c_int
+  n          = n_rows_ptr(1)
+  p          = n_cols_ptr(1)
+  threshold  = threshold_ptr(1)
+  n_pairs    = (p * (p - 1_c_int)) / 2_c_int
   use_openmp = (p >= openmp_min_columns .and. n * n_pairs >= openmp_min_pair_rows)
 
   call c_f_pointer(R_REAL(matrix_sexp), mat, [n * p])
@@ -184,7 +184,6 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
   result_sexp = Rf_protect(Rf_allocVector(LGLSXP, p))
   call c_f_pointer(LOGICAL(result_sexp), out_logical, [p])
 
-  ! Check for NA/Inf
   all_valid = .true.
   do i = 1_c_int, n * p
     if (.not. sby_internal_is_valid_double(mat(i))) then
@@ -206,15 +205,15 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
 
     threshold_f = real(threshold, c_float)
 
-    ! 1. Convert double* -> REAL*4 (doubles AVX-512 register density)
+    ! 1. double -> REAL*4 (-ftree-vectorize handles auto-vectorisation)
     allocate(mat_f(n * p))
-!$omp parallel do simd default(none) shared(mat, mat_f, n, p) schedule(static) if(use_openmp)
+!$omp parallel do default(none) shared(mat, mat_f, n, p) schedule(static) if(use_openmp)
     do i = 1_c_int, n * p
       mat_f(i) = real(mat(i), c_float)
     end do
-!$omp end parallel do simd
+!$omp end parallel do
 
-    ! 2. Compute column means in REAL*4
+    ! 2. Column means in REAL*4
     allocate(means_f(p))
 !$omp parallel do default(none) private(i, j) shared(mat_f, means_f, n, p) schedule(static) if(use_openmp)
     do j = 1_c_int, p
@@ -226,7 +225,7 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
     end do
 !$omp end parallel do
 
-    ! 3. Center columns in-place (REAL*4)
+    ! 3. Centre columns in-place
 !$omp parallel do default(none) private(i, j) shared(mat_f, means_f, n, p) schedule(static) if(use_openmp)
     do j = 1_c_int, p
       do i = 1_c_int, n
@@ -236,7 +235,7 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
 !$omp end parallel do
     deallocate(means_f)
 
-    ! 4. Column sum-of-squares in REAL*4
+    ! 4. Column sum-of-squares
     allocate(ss_f(p))
 !$omp parallel do default(none) private(i, j) shared(mat_f, ss_f, n, p) schedule(static) if(use_openmp)
     do j = 1_c_int, p
@@ -248,14 +247,12 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
 !$omp end parallel do
 
     ! 5. X'X via oneMKL ssyrk — REAL*4, upper triangle
-    !    C (p x p) := 1.0 * mat_f' * mat_f + 0.0 * C
-    !    UPLO='U', TRANS='T', N=p, K=n
     allocate(xtx_f(p * p))
     xtx_f = 0.0_c_float
     call ssyrk('U', 'T', p, n, 1.0_c_float, mat_f, n, 0.0_c_float, xtx_f, p)
     deallocate(mat_f)
 
-    ! 6. Normalise to absolute correlation in REAL*4
+    ! 6. Normalise to absolute correlation
     allocate(cor_f(p * p))
     cor_f = 0.0_c_float
     do j = 1_c_int, p
@@ -273,7 +270,7 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
     end do
     deallocate(xtx_f, ss_f)
 
-    ! 7. Jolliffe pruning in REAL*4
+    ! 7. Jolliffe pruning
     do while (num_active >= 2_c_int)
       max_val_f = -1.0_c_float
       best_i = -1_c_int;  best_j = -1_c_int
@@ -311,7 +308,7 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
     deallocate(cor_f)
 
   ! ===========================================================
-  ! PATH B: pairwise (NA/Inf present) — REAL*8, unchanged
+  ! PATH B: pairwise (NA/Inf present) — REAL*8
   ! ===========================================================
   else
 
@@ -367,7 +364,6 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
 
   end if
 
-  ! Write result
   do i = 1_c_int, p
     out_logical(i) = merge(1_c_int, 0_c_int, active(i))
   end do
