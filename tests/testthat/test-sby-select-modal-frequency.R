@@ -25,9 +25,8 @@ test_that("sby_select_modal_frequency does not depend on modal-frequency native 
 
 test_that("sby_select_modal_frequency removes columns at or above modal threshold", {
   modal_data <- data.frame(
-    remove_me = c("a", "a", "a", "b"),
-    keep_me = c("a", "b", "c", "d"),
-    stringsAsFactors = FALSE
+    remove_me = c(1L, 1L, 1L, 2L),
+    keep_me = c(1L, 2L, 3L, 4L)
   )
 
   filtered_data <- sby_select_modal_frequency(
@@ -41,10 +40,9 @@ test_that("sby_select_modal_frequency removes columns at or above modal threshol
 
 test_that("sby_select_modal_frequency limits modal filtering to tidyselect columns", {
   modal_data <- data.frame(
-    selected_remove = c("a", "a", "a", "b"),
-    unselected_modal = c("z", "z", "z", "w"),
-    keep_me = c("a", "b", "c", "d"),
-    stringsAsFactors = FALSE
+    selected_remove = c(1L, 1L, 1L, 2L),
+    unselected_modal = c(9L, 9L, 9L, 8L),
+    keep_me = c(1L, 2L, 3L, 4L)
   )
 
   filtered_data <- sby_select_modal_frequency(
@@ -58,10 +56,9 @@ test_that("sby_select_modal_frequency limits modal filtering to tidyselect colum
 
 test_that("sby_select_modal_frequency supports tidyselect exclusion", {
   modal_data <- data.frame(
-    excluded_modal = c("a", "a", "a", "b"),
-    selected_modal = c("z", "z", "z", "w"),
-    keep_me = c("a", "b", "c", "d"),
-    stringsAsFactors = FALSE
+    excluded_modal = c(1L, 1L, 1L, 2L),
+    selected_modal = c(9L, 9L, 9L, 8L),
+    keep_me = c(1L, 2L, 3L, 4L)
   )
 
   filtered_data <- sby_select_modal_frequency(

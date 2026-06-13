@@ -3,10 +3,10 @@ test_that("sby_select_correlation exists", {
 })
 
 test_that("sby_select_correlation removes highly correlated numeric columns", {
-  df <- data.frame(x1 = 1:6, x2 = 2 * (1:6), x3 = c(6, 1, 5, 2, 4, 3), group = letters[1:6])
+  df <- data.frame(x1 = 1:6, x2 = 2 * (1:6), x3 = c(6, 1, 5, 2, 4, 3))
   out <- sby_select_correlation(df, threshold = 0.99)
   expect_equal(length(intersect(names(out), c("x1", "x2"))), 1L)
-  expect_true(all(c("x3", "group") %in% names(out)))
+  expect_true("x3" %in% names(out))
 })
 
 test_that("sby_select_correlation supports matrix with and without colnames", {

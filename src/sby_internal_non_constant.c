@@ -1,5 +1,4 @@
 
-#include <string.h>
 #include <R.h>
 #include <Rinternals.h>
 #include <R_ext/Rdynload.h>
@@ -7,7 +6,7 @@
 /**
  * @title Verifica se um vetor atomico e constante
  * @description Segue uma logica de saida rapida e encerra no primeiro valor diferente
- * @details Para REAL e COMPLEX o comportamento trata NA e NaN como equivalentes dentro da coluna
+ * @details O pacote privado do cliente processa somente colunas INTEGER e REAL
  * @param x Vetor atomico sem dimensao
  * @return 1 quando a coluna e constante e 0 caso contrario
  */
@@ -18,9 +17,8 @@ static int sby_internal_is_constant_atomic(SEXP x) {
 
   /* Escolhe caminho especializado por tipo para reduzir overhead */
   switch (TYPEOF(x)) {
-  case LGLSXP:
   case INTSXP: {
-    /* Compara todos os inteiros/logicos com o primeiro valor */
+    /* Compara todos os inteiros com o primeiro valor */
     int first = INTEGER(x)[0];
     for (R_xlen_t i = 1; i < n; ++i) {
       if (INTEGER(x)[i] != first) return 0;
@@ -41,38 +39,8 @@ static int sby_internal_is_constant_atomic(SEXP x) {
     }
     return 1;
   }
-  case CPLXSXP: {
-    /* Em complex avalia parte real e imaginaria com a mesma logica de NaN */
-    Rcomplex first = COMPLEX(x)[0];
-    int first_nan_r = ISNAN(first.r), first_nan_i = ISNAN(first.i);
-    for (R_xlen_t i = 1; i < n; ++i) {
-      Rcomplex cur = COMPLEX(x)[i];
-      if (first_nan_r) { if (!ISNAN(cur.r)) return 0; } else if (cur.r != first.r) return 0;
-      if (first_nan_i) { if (!ISNAN(cur.i)) return 0; } else if (cur.i != first.i) return 0;
-    }
-    return 1;
-  }
-  case STRSXP: {
-    /* Em string usa comparacao por ponteiro quando possivel e fallback por conteudo */
-    SEXP first = STRING_ELT(x, 0);
-    for (R_xlen_t i = 1; i < n; ++i) {
-      SEXP cur = STRING_ELT(x, i);
-      if (cur == first) continue;
-      if (cur == NA_STRING || first == NA_STRING) return 0;
-      if (strcmp(CHAR(cur), CHAR(first)) != 0) return 0;
-    }
-    return 1;
-  }
-  case RAWSXP: {
-    /* Para bytes faz comparacao direta valor a valor */
-    Rbyte first = RAW(x)[0];
-    for (R_xlen_t i = 1; i < n; ++i) {
-      if (RAW(x)[i] != first) return 0;
-    }
-    return 1;
-  }
   default:
-    /* Tipo nao tratado explicitamente fica como nao constante por seguranca */
+    Rf_error("sbyops expects only integer or double columns.");
     return 0;
   }
 }
