@@ -98,7 +98,7 @@ sby_select_correlation <- function(.data, ..., threshold){
     return(.data)
   }
 
-  # Materialize numeric matrix in double precision — contiguous column-major layout required by Fortran/BLAS
+  # Materialize numeric matrix in double precision
   numeric_data <- selected_data[, numeric_mask, drop = FALSE]
   numeric_column_names <- colnames(numeric_data)
   numeric_matrix <- data.matrix(numeric_data)
@@ -114,17 +114,17 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   requested_threads <- sby_internal_get_max_threads()
   context <- sby_internal_capture_thread_context(
-    use_openmp = selected_strategy %in% c("fortran", "blas"),
-    use_blas = selected_strategy == "blas"
+    useOpenmp = selected_strategy %in% c("fortran", "blas"),
+    useBlas = selected_strategy == "blas"
   )
   on.exit(sby_internal_restore_thread_context(context), add = TRUE)
 
   if(selected_strategy %in% c("fortran", "blas")){
     sby_internal_apply_thread_context(
-      max_threads = requested_threads,
-      thread_context = context,
-      use_openmp = TRUE,
-      use_blas = selected_strategy == "blas"
+      maxThreads = requested_threads,
+      threadContext = context,
+      useOpenmp = TRUE,
+      useBlas = selected_strategy == "blas"
     )
   }
 
