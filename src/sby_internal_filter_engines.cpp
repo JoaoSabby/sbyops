@@ -33,24 +33,9 @@ std::string make_column_key(SEXP column, R_xlen_t row_index) {
     }
     return std::string("d:") + std::to_string(current_value);
   }
-  case LGLSXP: {
-    LogicalVector values(column);
-    int current_value = values[row_index];
-    if(current_value == NA_LOGICAL) {
-      return "<NA_LOGICAL>";
-    }
-    return std::string("l:") + std::to_string(current_value);
-  }
-  case STRSXP: {
-    CharacterVector values(column);
-    String current_value = values[row_index];
-    if(CharacterVector::is_na(current_value)) {
-      return "<NA_STRING>";
-    }
-    return std::string("s:") + static_cast<std::string>(current_value);
-  }
   default: {
-    return std::string("u:") + std::to_string(TYPEOF(column)) + ":" + std::to_string(row_index);
+    stop("sbyops expects only integer or double columns.");
+    return "";
   }
   }
 }
@@ -83,11 +68,6 @@ double get_numeric_value(SEXP numeric_data, int row_index, int column_index, int
     IntegerVector values(current_column);
     const int current_value = values[row_index];
     return current_value == NA_INTEGER ? NA_REAL : static_cast<double>(current_value);
-  }
-  case LGLSXP: {
-    LogicalVector values(current_column);
-    const int current_value = values[row_index];
-    return current_value == NA_LOGICAL ? NA_REAL : static_cast<double>(current_value);
   }
   default:
     return NA_REAL;

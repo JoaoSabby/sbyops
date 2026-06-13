@@ -1,10 +1,10 @@
-# Cenarios basicos com mistura de tipos
+# Cenarios basicos somente com integer e double
 test_that("sby_select_non_constant removes constant columns", {
   df <- data.frame(
     x = 1:5,
     y = rep(2L, 5),
-    z = c("a", "a", "a", "a", "a"),
-    w = c(TRUE, FALSE, TRUE, FALSE, TRUE)
+    z = rep(3.5, 5),
+    w = c(1L, 0L, 1L, 0L, 1L)
   )
 
   out <- sby_select_non_constant(df)
@@ -16,7 +16,7 @@ test_that("sby_select_non_constant respects tidyselect", {
   df <- data.frame(
     a = rep(1, 4),
     b = 1:4,
-    c = rep("k", 4)
+    c = rep(9.0, 4)
   )
 
   out <- sby_select_non_constant(df, a:c)
