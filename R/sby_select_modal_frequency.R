@@ -64,30 +64,17 @@ sby_select_modal_frequency <- function(.data, ..., threshold = 0.99){
     return(.data)
   }
 
-  # Materialize selected columns once before computing modal frequencies
+  # Materialize selected columns once and delegate modal-frequency filtering to native code
   selected_data <- .data[, unname(selected_columns), drop = FALSE]
   column_data <- as.data.frame(selected_data, stringsAsFactors = FALSE)
-  cutoff <- ceiling(threshold * n_rows)
-  count_occur <- kit::countOccur
-
-  # Compute the keep mask entirely in R so execution never depends on native symbol availability
-  keep_mask <- vapply(
-    X = column_data,
-    FUN = function(current_column){
-      occurrence_table <- count_occur(current_column)
-
-      if(nrow(occurrence_table) == 0L){
-        return(TRUE)
-      }
-
-      max_count <- max(as.numeric(occurrence_table[, 2L]), na.rm = TRUE)
-      max_count < cutoff
-    },
-    FUN.VALUE = logical(1L)
+  removed_columns <- .Call(
+    "sby_internal_modal_frequency_removed_columns_cpp",
+    column_data,
+    threshold,
+    PACKAGE = "sbyops"
   )
 
   # Remove only selected columns whose modal proportion reaches or exceeds the threshold
-  removed_columns <- names(column_data)[!keep_mask]
   kept_columns <- setdiff(colnames(.data), removed_columns)
   filtered_data <- .data[, kept_columns, drop = FALSE]
 

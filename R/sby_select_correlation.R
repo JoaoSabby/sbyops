@@ -98,17 +98,21 @@ sby_select_correlation <- function(.data, ..., threshold){
     return(.data)
   }
 
-  # Materialize numeric matrix in double precision
+  # Keep selected numeric columns in their tabular form for native ingestion
   numeric_data <- selected_data[, numeric_mask, drop = FALSE]
-  numeric_column_names <- colnames(numeric_data)
-  numeric_matrix <- data.matrix(numeric_data)
-  storage.mode(numeric_matrix) <- "double"
 
-  # Select automatic strategy using configured thresholds
+  # Select automatic strategy for thread-context reporting while native filtering owns pruning
   selected_strategy <- sby_internal_select_correlation_strategy(
-    selected_data = numeric_matrix
+    selected_data = numeric_data
   )
-  if(any(!is.finite(numeric_matrix))){
+  has_non_finite <- any(vapply(
+    X = as.data.frame(numeric_data),
+    FUN = function(current_column){
+      any(!is.finite(current_column))
+    },
+    FUN.VALUE = logical(1L)
+  ))
+  if(has_non_finite){
     selected_strategy <- "fortran"
   }
 
@@ -128,25 +132,13 @@ sby_select_correlation <- function(.data, ..., threshold){
     )
   }
 
-  # Dispatch correlation computation according to selected strategy
-  if(selected_strategy == "fortran"){
-    removed_columns <- sby_internal_compute_correlation_fortran(
-      numeric_matrix = numeric_matrix,
-      threshold = threshold
-    )
-  } else if(selected_strategy == "blas"){
-    correlation_matrix <- sby_internal_compute_correlation_blas(mat = numeric_matrix)
-    removed_columns <- sby_internal_apply_correlation_selection(
-      cor_mat = correlation_matrix,
-      threshold = threshold
-    )
-  } else {
-    correlation_matrix <- sby_internal_compute_correlation_streaming(mat = numeric_matrix)
-    removed_columns <- sby_internal_apply_correlation_selection(
-      cor_mat = correlation_matrix,
-      threshold = threshold
-    )
-  }
+  # Delegate correlation filtering and threshold pruning entirely to native code
+  removed_columns <- .Call(
+    "sby_internal_correlation_removed_columns_cpp",
+    numeric_data,
+    threshold,
+    PACKAGE = "sbyops"
+  )
 
   # Compose concise execution message with backend and thread details
   blas_library <- extSoftVersion()["BLAS"]
