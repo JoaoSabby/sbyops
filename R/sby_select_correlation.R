@@ -59,7 +59,7 @@ sby_select_correlation <- function(.data, ..., threshold){
   )
 
   # Return unchanged input when no rows or columns are available
-  if(collapse::fncol(.data) == 0L || collapse::fnrow(.data) == 0L){
+  if(fncol(.data) == 0L || fnrow(.data) == 0L){
 
     # Return input unchanged for empty tabular shapes
     return(.data)
@@ -85,10 +85,6 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   # Filter selected data and keep only numeric vectors
   selected_data <- .data[, unname(selected_columns), drop = FALSE]
-  sby_internal_validate_tabular_input(
-    .data = selected_data,
-    validate_column_types = TRUE
-  )
   numeric_mask <- vapply(
     X = as.data.frame(selected_data),
     FUN = sby_internal_is_numeric_column,
@@ -102,56 +98,65 @@ sby_select_correlation <- function(.data, ..., threshold){
     return(.data)
   }
 
-  # Keep selected numeric columns in their tabular form for native ingestion
+  # Materialize numeric matrix in double precision — contiguous column-major layout required by Fortran/BLAS
   numeric_data <- selected_data[, numeric_mask, drop = FALSE]
+  numeric_column_names <- colnames(numeric_data)
+  numeric_matrix <- data.matrix(numeric_data)
+  storage.mode(numeric_matrix) <- "double"
 
-  # Select automatic strategy for thread-context reporting while native filtering owns pruning
+  # Select automatic strategy using configured thresholds
   selected_strategy <- sby_internal_select_correlation_strategy(
-    selected_data = numeric_data
+    selected_data = numeric_matrix
   )
-  has_non_finite <- any(vapply(
-    X = as.data.frame(numeric_data),
-    FUN = function(current_column){
-      any(!is.finite(current_column))
-    },
-    FUN.VALUE = logical(1L)
-  ))
-  if(has_non_finite){
+  if(any(!is.finite(numeric_matrix))){
     selected_strategy <- "fortran"
   }
 
   requested_threads <- sby_internal_get_max_threads()
   context <- sby_internal_capture_thread_context(
-    use_openmp = selected_strategy %in% c("fortran", "blas"),
-    use_blas = selected_strategy == "blas"
+    useOpenmp = selected_strategy %in% c("fortran", "blas"),
+    useBlas = selected_strategy == "blas"
   )
   on.exit(sby_internal_restore_thread_context(context), add = TRUE)
 
   if(selected_strategy %in% c("fortran", "blas")){
     sby_internal_apply_thread_context(
-      max_threads = requested_threads,
-      thread_context = context,
-      use_openmp = TRUE,
-      use_blas = selected_strategy == "blas"
+      maxThreads = requested_threads,
+      threadContext = context,
+      useOpenmp = TRUE,
+      useBlas = selected_strategy == "blas"
     )
   }
 
-  # Delegate correlation filtering and threshold pruning entirely to native code
-  removed_columns <- .Call(
-    "sby_internal_correlation_removed_columns_cpp",
-    numeric_data,
-    threshold,
-    PACKAGE = "sbyops"
-  )
+  # Dispatch correlation computation according to selected strategy
+  if(selected_strategy == "fortran"){
+    removed_columns <- sby_internal_compute_correlation_fortran(
+      numeric_matrix = numeric_matrix,
+      threshold = threshold
+    )
+  } else if(selected_strategy == "blas"){
+    correlation_matrix <- sby_internal_compute_correlation_blas(mat = numeric_matrix)
+    removed_columns <- sby_internal_apply_correlation_selection(
+      cor_mat = correlation_matrix,
+      threshold = threshold
+    )
+  } else {
+    correlation_matrix <- sby_internal_compute_correlation_streaming(mat = numeric_matrix)
+    removed_columns <- sby_internal_apply_correlation_selection(
+      cor_mat = correlation_matrix,
+      threshold = threshold
+    )
+  }
 
   # Compose concise execution message with backend and thread details
   blas_library <- extSoftVersion()["BLAS"]
+  rhpc_used <- !is.null(context$rhpc) && isTRUE(context$rhpc$used)
   cli::cli_alert_info(
     paste0(
       "strategy=", selected_strategy,
       " | BLAS_detected=", blas_library,
       " | threads_requested=", requested_threads,
-      " | env_control=OMP_THREAD_LIMIT/MKL_NUM_THREADS",
+      " | RhpcBLASctl_used=", ifelse(rhpc_used, "yes", "no"),
       " | context_restore=enabled"
     )
   )

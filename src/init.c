@@ -7,8 +7,6 @@ extern SEXP sby_internal_correlation_pearson_matrix_fortran(SEXP matrix, SEXP n_
 extern SEXP sby_internal_non_constant_mask(SEXP cols);
 extern SEXP _sbyops_sby_internal_table_detect_integer_type(SEXP current_column);
 extern SEXP _sbyops_sby_internal_table_detect_numeric_type(SEXP current_column);
-extern SEXP sby_internal_correlation_removed_columns_cpp(SEXP numeric_matrix, SEXP threshold);
-extern SEXP sby_internal_modal_frequency_removed_columns_cpp(SEXP selected_data, SEXP threshold);
 
 /**
  * @title Tabela de rotinas nativas expostas ao R
@@ -17,8 +15,6 @@ extern SEXP sby_internal_modal_frequency_removed_columns_cpp(SEXP selected_data,
 static const R_CallMethodDef CallEntries[] = {
   {"sby_internal_correlation_pearson_matrix_fortran", (DL_FUNC) &sby_internal_correlation_pearson_matrix_fortran, 4},
   {"sby_internal_non_constant_mask", (DL_FUNC) &sby_internal_non_constant_mask, 1},
-  {"sby_internal_correlation_removed_columns_cpp", (DL_FUNC) &sby_internal_correlation_removed_columns_cpp, 2},
-  {"sby_internal_modal_frequency_removed_columns_cpp", (DL_FUNC) &sby_internal_modal_frequency_removed_columns_cpp, 2},
   {"_sbyops_sby_internal_table_detect_integer_type", (DL_FUNC) &_sbyops_sby_internal_table_detect_integer_type, 1},
   {"_sbyops_sby_internal_table_detect_numeric_type", (DL_FUNC) &_sbyops_sby_internal_table_detect_numeric_type, 1},
   {NULL, NULL, 0}
