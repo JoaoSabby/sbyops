@@ -1,11 +1,13 @@
 # Flags de compilação do pacote sbyops.
 #
-# Este pacote é implantado em ambiente HPC dedicado do cliente com Intel oneMKL
-# e CPUs AVX-512. A configuração abaixo força o caminho oneMKL single precision
-# para kernels densos e mantém OpenMP habilitado para os trechos pareados.
+# Servidor HPC do cliente: GCC toolchain, Intel oneMKL, AVX-512.
+# Runtime: LD_PRELOAD injeta libiomp5, libtbbmalloc e libtbbmalloc_proxy.
+# Por isso usamos mkl_intel_lp64 + mkl_intel_thread + iomp5 (não gnu_thread/gomp).
 
-PKG_FFLAGS = $(SHLIB_OPENMP_FFLAGS) -mavx512f -mavx512dq -mavx512bw -mavx512vl -mfma
+PKG_FFLAGS   = $(SHLIB_OPENMP_FFLAGS) -mavx512f -mavx512dq -mavx512bw -mavx512vl -mfma
 PKG_CPPFLAGS = -I$(MKLROOT)/include
-PKG_CFLAGS = $(SHLIB_OPENMP_CFLAGS) -mavx512f -mavx512dq -mavx512bw -mavx512vl -mfma
+PKG_CFLAGS   = $(SHLIB_OPENMP_CFLAGS) -mavx512f -mavx512dq -mavx512bw -mavx512vl -mfma
 PKG_CXXFLAGS = $(SHLIB_OPENMP_CFLAGS) -mavx512f -mavx512dq -mavx512bw -mavx512vl -mfma
-PKG_LIBS = -L$(MKLROOT)/lib/intel64 -Wl,--no-as-needed -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl $(FLIBS)
+PKG_LIBS     = -L$(MKLROOT)/lib/intel64 -Wl,--no-as-needed \
+               -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core \
+               -liomp5 -lpthread -lm -ldl $(FLIBS)
