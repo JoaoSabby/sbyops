@@ -1,4 +1,7 @@
-PKG_FFLAGS = $(SHLIB_OPENMP_FFLAGS)
-PKG_FCFLAGS = $(SHLIB_OPENMP_FFLAGS)
-PKG_CFLAGS = $(SHLIB_OPENMP_CFLAGS)
-PKG_LIBS   = $(SHLIB_OPENMP_CFLAGS) $(FLIBS)
+# Windows builds for this private HPC package require Intel oneMKL.
+# Set MKLROOT before installing the package.
+
+PKG_CPPFLAGS = -I$(MKLROOT)/include
+PKG_CFLAGS = $(SHLIB_OPENMP_CFLAGS) -mavx512f -mavx512dq -mavx512bw -mavx512vl -mfma
+PKG_CXXFLAGS = $(SHLIB_OPENMP_CFLAGS) -mavx512f -mavx512dq -mavx512bw -mavx512vl -mfma
+PKG_LIBS = -L$(MKLROOT)/lib/intel64 -lmkl_gf_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm
