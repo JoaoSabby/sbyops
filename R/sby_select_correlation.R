@@ -14,33 +14,25 @@ sby_select_correlation <- function(.data, ..., threshold){
   storage.mode(numeric_matrix) <- "double"
 
   selected_strategy <- sby_internal_select_correlation_strategy(selected_data = numeric_matrix)
-  if(any(!is.finite(numeric_matrix))) selected_strategy <- "fortran"
 
   requested_threads <- sby_internal_get_max_threads()
   context <- sby_internal_capture_thread_context(
-    useOpenmp = selected_strategy %in% c("fortran", "blas"),
-    useBlas   = selected_strategy == "blas"
+    useOpenmp = selected_strategy == "fortran",
+    useBlas   = selected_strategy == "fortran"
   )
   on.exit(sby_internal_restore_thread_context(context), add = TRUE)
 
-  if(selected_strategy %in% c("fortran", "blas")){
+  if(selected_strategy == "fortran"){
     sby_internal_apply_thread_context(
       maxThreads    = requested_threads,
       threadContext = context,
       useOpenmp     = TRUE,
-      useBlas       = selected_strategy == "blas"
+      useBlas       = TRUE
     )
-  }
 
-  if(selected_strategy == "fortran"){
     removed_columns <- sby_internal_compute_correlation_fortran(
       numeric_matrix = numeric_matrix,
       threshold      = threshold
-    )
-  } else if(selected_strategy == "blas"){
-    removed_columns <- sby_internal_apply_correlation_selection(
-      cor_mat   = sby_internal_compute_correlation_blas(mat = numeric_matrix),
-      threshold = threshold
     )
   } else {
     removed_columns <- sby_internal_apply_correlation_selection(

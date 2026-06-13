@@ -7,47 +7,31 @@
 #'
 #' @details
 #' The strategy uses `prod(dim(selected_data))` and configured
-#' options to select streaming, Fortran, or BLAS execution
+#' options to select streaming or Fortran execution.
+#'
+#' The former `blas` path (R-level sweep + crossprod + outer) was
+#' removed: it allocated 4-5 full matrix copies in interpreted R
+#' before MKL touched data. The Fortran path calls oneMKL ssyrk
+#' directly on REAL*4 in-place memory and is strictly faster.
 #'
 #' @param selected_data Numeric tabular object selected for correlation
 #'
-#' @return A single strategy label: `"streaming"`, `"fortran"`, or
-#' `"blas"`
+#' @return A single strategy label: `"streaming"` or `"fortran"`
 #'
 #' @examples
 #' sample_data <- matrix(stats::rnorm(100), ncol = 5)
 #' sby_internal_select_correlation_strategy(selected_data = sample_data)
 sby_internal_select_correlation_strategy <- function(selected_data){
 
-  # Compute workload size from selected data dimensions
   selected_data_size <- prod(dim(selected_data))
-
-  # Load configured backend thresholds
   start_fortran <- getOption("sby_config_start_fortran", 10000L)
-  start_blas <- getOption("sby_config_start_blas", 100000L)
 
-  # Select BLAS backend for largest workloads
-  if(selected_data_size >= start_blas){
-    selected_strategy <- "blas"
-
-    # Return selected backend strategy for largest workloads
-    return(selected_strategy)
+  if(selected_data_size >= start_fortran){
+    return("fortran")
   }
 
-  # Select Fortran backend for medium workloads
-  if(selected_data_size > start_fortran){
-    selected_strategy <- "fortran"
-
-    # Return selected backend strategy for medium workloads
-    return(selected_strategy)
-  }
-
-  # Select streaming backend for smaller workloads
-  selected_strategy <- "streaming"
-
-  # Return selected backend strategy for smaller workloads
-  return(selected_strategy)
+  return("streaming")
 }
 ####
 ## End
-# 
+#
