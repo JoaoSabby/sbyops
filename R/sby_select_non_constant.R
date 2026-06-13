@@ -23,7 +23,7 @@ sby_select_non_constant <- function(.data, ...){
 
   sby_internal_validate_tabular_input(.data = .data)
 
-  if(fncol(.data) == 0L || fnrow(.data) == 0L){
+  if(collapse::fncol(.data) == 0L || collapse::fnrow(.data) == 0L){
     return(.data)
   }
 
@@ -40,6 +40,10 @@ sby_select_non_constant <- function(.data, ...){
   }
 
   selected_data <- .data[, unname(selected_columns), drop = FALSE]
+  sby_internal_validate_tabular_input(
+    .data = selected_data,
+    validate_column_types = TRUE
+  )
   selected_list <- as.list(as.data.frame(selected_data, stringsAsFactors = FALSE))
 
   keep_mask <- .Call(

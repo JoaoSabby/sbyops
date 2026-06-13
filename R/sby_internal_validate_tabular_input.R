@@ -1,32 +1,38 @@
 #' @title Internal Helper: Validate Tabular Input
 #'
-#' @usage sby_internal_validate_tabular_input(.data)
+#' @usage sby_internal_validate_tabular_input(.data, validate_column_types = FALSE)
 #'
 #' @description Validate supported tabular input classes for selectors
 #'
 #' @param .data Candidate tabular object
 #'
+#' @param validate_column_types Whether to validate that the provided object only
+#' contains integer or double columns
+#'
 #' @return The validated input object
-sby_internal_validate_tabular_input <- function(.data){
+sby_internal_validate_tabular_input <- function(.data, validate_column_types = FALSE){
 
   # Abort when input is not a data frame, tibble, or matrix
   if(!(inherits(.data, "data.frame") || is.matrix(.data))){
     stop("`.data` must be a data.frame, tibble, or matrix", call. = FALSE)
   }
 
-  # This private package is deployed for a fixed client schema: only integer
-  # and double columns are accepted. Other column types are rejected early so
-  # the native code can stay specialized for the server workload.
-  if(is.matrix(.data)){
-    if(!(is.integer(.data) || is.double(.data))){
-      stop("`.data` must contain only integer or double columns", call. = FALSE)
-    }
-  } else {
-    valid_columns <- vapply(.data, function(current_column){
-      is.integer(current_column) || is.double(current_column)
-    }, logical(1L))
-    if(!all(valid_columns)){
-      stop("`.data` must contain only integer or double columns", call. = FALSE)
+  if(isTRUE(validate_column_types)){
+    # This private package is deployed for a fixed client schema: only integer
+    # and double columns are accepted by the specialized native paths. The
+    # public selectors call this branch only after tidyselect has reduced the
+    # input to the columns that will actually be evaluated.
+    if(is.matrix(.data)){
+      if(!(is.integer(.data) || is.double(.data))){
+        stop("`.data` must contain only integer or double columns", call. = FALSE)
+      }
+    } else {
+      valid_columns <- vapply(.data, function(current_column){
+        is.integer(current_column) || is.double(current_column)
+      }, logical(1L))
+      if(!all(valid_columns)){
+        stop("`.data` must contain only integer or double columns", call. = FALSE)
+      }
     }
   }
 

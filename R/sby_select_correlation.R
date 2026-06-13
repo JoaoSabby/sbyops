@@ -59,7 +59,7 @@ sby_select_correlation <- function(.data, ..., threshold){
   )
 
   # Return unchanged input when no rows or columns are available
-  if(fncol(.data) == 0L || fnrow(.data) == 0L){
+  if(collapse::fncol(.data) == 0L || collapse::fnrow(.data) == 0L){
 
     # Return input unchanged for empty tabular shapes
     return(.data)
@@ -85,6 +85,10 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   # Filter selected data and keep only numeric vectors
   selected_data <- .data[, unname(selected_columns), drop = FALSE]
+  sby_internal_validate_tabular_input(
+    .data = selected_data,
+    validate_column_types = TRUE
+  )
   numeric_mask <- vapply(
     X = as.data.frame(selected_data),
     FUN = sby_internal_is_numeric_column,
@@ -142,13 +146,12 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   # Compose concise execution message with backend and thread details
   blas_library <- extSoftVersion()["BLAS"]
-  rhpc_used <- !is.null(context$rhpc) && isTRUE(context$rhpc$used)
   cli::cli_alert_info(
     paste0(
       "strategy=", selected_strategy,
       " | BLAS_detected=", blas_library,
       " | threads_requested=", requested_threads,
-      " | RhpcBLASctl_used=", ifelse(rhpc_used, "yes", "no"),
+      " | env_control=OMP_THREAD_LIMIT/MKL_NUM_THREADS",
       " | context_restore=enabled"
     )
   )

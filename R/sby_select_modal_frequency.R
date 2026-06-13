@@ -66,6 +66,10 @@ sby_select_modal_frequency <- function(.data, ..., threshold = 0.99){
 
   # Materialize selected columns once and delegate modal-frequency filtering to native code
   selected_data <- .data[, unname(selected_columns), drop = FALSE]
+  sby_internal_validate_tabular_input(
+    .data = selected_data,
+    validate_column_types = TRUE
+  )
   column_data <- as.data.frame(selected_data, stringsAsFactors = FALSE)
   removed_columns <- .Call(
     "sby_internal_modal_frequency_removed_columns_cpp",
