@@ -146,13 +146,12 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   # Compose concise execution message with backend and thread details
   blas_library <- extSoftVersion()["BLAS"]
-  rhpc_used <- !is.null(context$rhpc) && isTRUE(context$rhpc$used)
   cli::cli_alert_info(
     paste0(
       "strategy=", selected_strategy,
       " | BLAS_detected=", blas_library,
       " | threads_requested=", requested_threads,
-      " | RhpcBLASctl_used=", ifelse(rhpc_used, "yes", "no"),
+      " | env_control=OMP_THREAD_LIMIT/MKL_NUM_THREADS",
       " | context_restore=enabled"
     )
   )
