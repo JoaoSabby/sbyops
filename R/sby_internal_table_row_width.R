@@ -17,7 +17,7 @@
 sby_internal_table_row_width <- function(.data){
   
   # Obtain the number of rows with a fast collapse function
-  row_count <- fnrow(.data)
+  row_count <- collapse::fnrow(.data)
   
   # Use a minimal estimate for empty tables
   if(row_count == 0L){

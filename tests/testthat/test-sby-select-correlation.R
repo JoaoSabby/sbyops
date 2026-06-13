@@ -33,6 +33,26 @@ test_that("sby_select_correlation validates threshold", {
   expect_error(sby_select_correlation(df, threshold = -0.1), "between 0 and 1")
 })
 
+test_that("sby_select_correlation validates column types only after tidyselect", {
+  df <- data.frame(
+    TARGET = c("a", "b", "c", "d", "e", "f"),
+    colunasId = paste0("id", 1:6),
+    x1 = 1:6,
+    x2 = 2 * (1:6),
+    x3 = c(6, 1, 5, 2, 4, 3)
+  )
+
+  out <- sby_select_correlation(df, -TARGET, -colunasId, threshold = 0.99)
+  expect_true(all(c("TARGET", "colunasId") %in% names(out)))
+  expect_equal(length(intersect(names(out), c("x1", "x2"))), 1L)
+
+  expect_error(
+    sby_select_correlation(df, TARGET, threshold = 0.99),
+    "`.data` must contain only integer or double columns",
+    fixed = TRUE
+  )
+})
+
 test_that("sby_select_correlation is stable across OpenMP thread counts", {
   skip_on_cran()
   old_threads <- Sys.getenv("OMP_NUM_THREADS", unset = NA_character_)

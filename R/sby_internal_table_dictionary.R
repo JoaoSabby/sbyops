@@ -23,7 +23,7 @@
 sby_internal_table_dictionary <- function(.data){
   
   # Obtain the number of rows with a fast collapse function
-  row_count <- fnrow(.data)
+  row_count <- collapse::fnrow(.data)
   
   # Return an empty vector when there are no columns
   if(length(.data) == 0L){

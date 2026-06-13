@@ -26,6 +26,24 @@ test_that("sby_select_non_constant respects tidyselect", {
   expect_named(out2, c("a", "b", "c"))
 })
 
+test_that("sby_select_non_constant validates column types only after tidyselect", {
+  df <- data.frame(
+    TARGET = c("x", "y", "z", "w"),
+    colunasId = c("id1", "id2", "id3", "id4"),
+    constant_numeric = rep(1L, 4),
+    varying_numeric = 1:4
+  )
+
+  out <- sby_select_non_constant(df, -TARGET, -colunasId)
+  expect_named(out, c("TARGET", "colunasId", "varying_numeric"))
+
+  expect_error(
+    sby_select_non_constant(df, TARGET),
+    "`.data` must contain only integer or double columns",
+    fixed = TRUE
+  )
+})
+
 # Mantem retorno como matrix quando entrada e matrix
 test_that("sby_select_non_constant supports matrix input", {
   mat <- cbind(

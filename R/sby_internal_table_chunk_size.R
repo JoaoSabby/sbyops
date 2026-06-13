@@ -20,7 +20,7 @@
 sby_internal_table_chunk_size <- function(.data){
   
   # Obtain the number of rows with a fast collapse function
-  row_count <- fnrow(.data)
+  row_count <- collapse::fnrow(.data)
   
   # Keep the Arrow internal choice for empty tables
   if(row_count == 0L){

@@ -19,8 +19,8 @@ sby_internal_compute_correlation_fortran <- function(numeric_matrix, threshold){
   keep_logical <- .Call(
     "sby_internal_correlation_pearson_matrix_fortran",
     numeric_matrix,
-    as.integer(fnrow(numeric_matrix)),
-    as.integer(fncol(numeric_matrix)),
+    as.integer(collapse::fnrow(numeric_matrix)),
+    as.integer(collapse::fncol(numeric_matrix)),
     as.double(threshold),
     PACKAGE = "sbyops"
   )
