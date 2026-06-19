@@ -4,37 +4,16 @@
 
 using namespace Rcpp;
 
-//' @title Detect Integer Vector Metadata for Arrow Schema Optimization
-//'
-//' @description
-//' Performs a single-pass scan over an integer vector to collect metadata
-//' required for efficient Apache Arrow type inference.
-//'
-//' @details
-//' This function avoids separate calls for minimum, maximum, and boolean
-//' feasibility checks on integer columns. In a single pass over the vector, it
-//' evaluates whether the column has valid values, whether all valid values can
-//' be represented as booleans, and what the minimum and maximum values are.
-//'
-//' Missing values are ignored. Since the input vector is already an integer
-//' vector in R, no fractional component check is required.
-//'
-//' The function returns an unnamed numeric vector to reduce allocations at the
-//' C++ and R interface. The positions must be interpreted as follows:
-//' \enumerate{
-//'   \item Presence of at least one non-missing value
-//'   \item Boolean representation feasibility
-//'   \item Minimum value
-//'   \item Maximum value
-//' }
-//'
-//' @param current_column Integer vector from R.
-//'
-//' @return Numeric vector with four positions.
-//'
-//' @usage sby_internal_table_detect_integer_type(current_column)
-//'
-//' @keywords internal
+// @title Detectar metadados de vetor inteiro para esquema Arrow
+// @description Examina uma coluna recebida do R em uma unica passagem para
+// apoiar a inferencia interna de tipos Arrow na escrita Parquet.
+// @details A rotina C++ nao assume ownership da memoria do vetor R, nao altera
+// a entrada e retorna um vetor compacto sem nomes. Valores ausentes sao tratados
+// conforme a implementacao real da funcao. O uso direto e interno e deve
+// permanecer alinhado ao wrapper R gerado por Rcpp.
+// @param current_column Vetor recebido do R pela interface Rcpp.
+// @return vetor numerico de quatro posicoes com indicadores de metadados.
+// @seealso sby_table_optimize_scheme
 
 // [[Rcpp::export]]
 NumericVector sby_internal_table_detect_integer_type(IntegerVector current_column) {
