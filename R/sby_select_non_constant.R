@@ -46,11 +46,7 @@ sby_select_non_constant <- function(.data, ...){
   )
   selected_list <- as.list(as.data.frame(selected_data, stringsAsFactors = FALSE))
 
-  keep_mask <- .Call(
-    "sby_internal_non_constant_mask",
-    selected_list,
-    PACKAGE = "sbyops"
-  )
+  keep_mask <- sby_internal_non_constant_mask(selected_list)
   removed_columns <- colnames(selected_data)[!keep_mask]
   kept_columns <- setdiff(colnames(.data), removed_columns)
   filtered_data <- .data[, kept_columns, drop = FALSE]
@@ -59,6 +55,64 @@ sby_select_non_constant <- function(.data, ...){
     selected_data = filtered_data,
     original = .data
   )
+}
+
+#' @title Compute Non-Constant Column Mask
+#' @name sby_internal_non_constant_mask
+#'
+#' @description Compute a logical mask indicating which selected columns are not constant
+#'
+#' @param cols A list of selected columns
+#'
+#' @return A logical vector with TRUE for non-constant columns
+sby_internal_non_constant_mask <- function(cols){
+  if(!is.list(cols)){
+    stop("`cols` must be a list.", call. = FALSE)
+  }
+
+  if(is.loaded("sby_internal_non_constant_mask", PACKAGE = "sbyops")){
+    return(.Call(
+      "sby_internal_non_constant_mask",
+      cols,
+      PACKAGE = "sbyops"
+    ))
+  }
+
+  vapply(cols, sby_internal_is_non_constant_column, logical(1))
+}
+
+#' @title Check Whether a Column Is Non-Constant
+#' @name sby_internal_is_non_constant_column
+#'
+#' @description Pure-R fallback used when the native non-constant backend is unavailable
+#'
+#' @param x A selected column
+#'
+#' @return TRUE when the column contains at least two distinct values
+sby_internal_is_non_constant_column <- function(x){
+  if(!is.atomic(x) || !is.null(dim(x))){
+    return(TRUE)
+  }
+
+  n <- length(x)
+  if(n <= 1L){
+    return(FALSE)
+  }
+
+  first <- x[[1L]]
+  first_missing <- is.na(first)
+  for(i in seq.int(2L, n)){
+    current <- x[[i]]
+    if(first_missing){
+      if(!is.na(current)){
+        return(TRUE)
+      }
+    } else if(is.na(current) || current != first){
+      return(TRUE)
+    }
+  }
+
+  FALSE
 }
 ####
 ## End
