@@ -2,15 +2,15 @@
 ! sby_internal_correlation_pearson.f90
 !===============================================================================
 !
-! Native core for absolute Pearson correlation by column pair and Jolliffe pruning.
+! Nucleo nativo para correlacao absoluta de Pearson por par de colunas e poda de Jolliffe.
 !
-! R passes a double matrix in column-major order.
+! O R fornece uma matriz double em ordem column-major.
 !
-! all_valid path  : converts to REAL*4 internally, calls oneMKL ssyrk for X'X,
-!                   normalises and prunes in single precision.
-!                   Doubles AVX-512 register density vs REAL*8.
+! Caminho all_valid: converte para REAL*4, chama ssyrk para X'X,
+!                   normaliza e poda em precisao simples.
+!                   Aumenta densidade de registradores AVX-512 contra REAL*8.
 !
-! pairwise path   : data contains NA/Inf; stays in REAL*8, pair-by-pair loop.
+! Caminho pairwise: dados contem NA/Inf e permanecem em REAL*8 por par.
 !
 !===============================================================================
 
@@ -24,12 +24,31 @@ module sby_internal_correlation_pearson_core_mod
 
 contains
 
+  ! @title Validar escalar double finito
+  ! @description Retorna verdadeiro quando o valor double e finito segundo IEEE.
+  ! @details A funcao pura nao altera memoria, nao aloca objetos e e usada para
+  ! selecionar o caminho numerico da correlacao. Valores NA, NaN e Inf recebidos
+  ! da representacao double do R sao tratados como invalidos.
+  ! @param x Valor double de entrada.
+  ! @return Logico Fortran com o estado de finitude.
   pure logical function sby_internal_is_valid_double(x)
     real(c_double), intent(in) :: x
     sby_internal_is_valid_double = ieee_is_finite(x)
   end function sby_internal_is_valid_double
 
-  ! Pairwise (NA-safe) Pearson in REAL*8 — unchanged
+  ! @title Calcular Pearson absoluto por par com REAL*8
+  ! @description Calcula correlacao absoluta entre duas colunas ignorando pares
+  ! invalidos.
+  ! @details A subrotina pura percorre a matriz linearizada em ordem column-major
+  ! e atualiza medias, somas de quadrados e covariancia em uma passagem. O
+  ! resultado e devolvido por referencia em corr. Nao aloca memoria e nao usa
+  ! paralelismo.
+  ! @param mat Vetor double linearizado da matriz R.
+  ! @param n Numero de linhas.
+  ! @param col_i Indice inteiro da primeira coluna, iniciado em um.
+  ! @param col_j Indice inteiro da segunda coluna, iniciado em um.
+  ! @param corr Saida double com correlacao absoluta sanitizada.
+  ! Pairwise NA-safe Pearson in REAL*8.
   pure subroutine sby_internal_pearson_abs_pairwise_pair(mat, n, col_i, col_j, corr)
     real(c_double), intent(in)  :: mat(:)
     integer(c_int), intent(in)  :: n
@@ -75,6 +94,20 @@ contains
 end module sby_internal_correlation_pearson_core_mod
 
 
+! @title Calcular mascara de colunas por correlacao de Pearson em Fortran
+! @description Implementa a interface nativa chamada por .Call para calcular
+! correlacoes absolutas e aplicar poda iterativa por limiar.
+! @details A assinatura conceitual recebe uma matriz double do R, dimensoes
+! inteiras e limiar double. O retorno e um vetor logico R protegido, com TRUE
+! para colunas mantidas e FALSE para removidas. Quando todos os valores sao
+! finitos, a rotina usa buffers REAL*4 e ssyrk. Quando ha nao finitos, usa
+! percurso par a par em REAL*8. A memoria alocada e local, liberada ao fim da
+! rotina, e a saida e modificada por ponteiro LOGICAL do R.
+! @param matrix_sexp SEXP da matriz double em ordem column-major.
+! @param n_rows_sexp SEXP inteiro com numero de linhas.
+! @param n_cols_sexp SEXP inteiro com numero de colunas.
+! @param threshold_sexp SEXP double com limiar no intervalo validado pelo R.
+! @return SEXP logico com mascara de colunas mantidas.
 function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sexp, n_cols_sexp, threshold_sexp) &
     result(result_sexp) bind(C, name="sby_internal_correlation_pearson_matrix_fortran")
 
@@ -199,7 +232,7 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
   num_active = p
 
   ! ===========================================================
-  ! PATH A: all_valid — REAL*4 + oneMKL ssyrk
+  ! PATH A: all_valid - REAL*4 + oneMKL ssyrk
   ! ===========================================================
   if (all_valid) then
 
@@ -246,7 +279,7 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
     end do
 !$omp end parallel do
 
-    ! 5. X'X via oneMKL ssyrk — REAL*4, upper triangle
+    ! 5. X'X via oneMKL ssyrk - REAL*4, upper triangle
     allocate(xtx_f(p * p))
     xtx_f = 0.0_c_float
     call ssyrk('U', 'T', p, n, 1.0_c_float, mat_f, n, 0.0_c_float, xtx_f, p)
@@ -308,7 +341,7 @@ function sby_internal_correlation_pearson_matrix_fortran(matrix_sexp, n_rows_sex
     deallocate(cor_f)
 
   ! ===========================================================
-  ! PATH B: pairwise (NA/Inf present) — REAL*8
+  ! PATH B: pairwise (NA/Inf present) - REAL*8
   ! ===========================================================
   else
 

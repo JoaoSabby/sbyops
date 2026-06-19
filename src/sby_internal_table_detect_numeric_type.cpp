@@ -1,44 +1,19 @@
-//' @title Detect Numeric Vector Metadata for Arrow Schema Optimization
-//'
-//' @description
-//' Performs a single-pass scan over a numeric vector to collect metadata
-//' required for efficient Apache Arrow type inference.
-//'
-//' @details
-//' This function is intended for internal use in high-performance Parquet
-//' writing routines. In a single pass over the vector, it evaluates whether
-//' the column has valid values, whether it contains non-finite values, whether
-//' all finite values are mathematical integers, whether all finite values can
-//' be represented as numeric booleans, and what the minimum and maximum finite
-//' values are.
-//'
-//' Missing values, including \code{NA} and \code{NaN}, are ignored. Infinite
-//' values are detected and prevent safe conversion to integer Arrow types.
-//'
-//' The function returns an unnamed numeric vector to reduce allocations at the
-//' C++ and R interface. The positions must be interpreted as follows:
-//' \enumerate{
-  //'   \item Presence of at least one non-missing value
-//'   \item Presence of at least one non-finite value
-  //'   \item Integer nature of all finite values
-//'   \item Boolean representation feasibility
-  //'   \item Minimum finite value
-//'   \item Maximum finite value
-  //' }
-//'
-  //' @param current_column Numeric vector from R.
-//'
-  //' @return Numeric vector with six positions.
-//'
-  //' @usage sby_internal_table_detect_numeric_type(current_column)
-//'
-  //' @keywords internal
-
 #include <Rcpp.h>
 #include <cmath>
 #include <limits>
 
 using namespace Rcpp;
+
+// @title Detectar metadados de vetor numerico para esquema Arrow
+// @description Examina uma coluna recebida do R em uma unica passagem para
+// apoiar a inferencia interna de tipos Arrow na escrita Parquet.
+// @details A rotina C++ nao assume ownership da memoria do vetor R, nao altera
+// a entrada e retorna um vetor compacto sem nomes. Valores ausentes sao tratados
+// conforme a implementacao real da funcao. O uso direto e interno e deve
+// permanecer alinhado ao wrapper R gerado por Rcpp.
+// @param current_column Vetor recebido do R pela interface Rcpp.
+// @return vetor numerico de seis posicoes com indicadores de metadados.
+// @seealso sby_table_optimize_scheme
 
 // [[Rcpp::export]]
 NumericVector sby_internal_table_detect_numeric_type(NumericVector current_column) {
