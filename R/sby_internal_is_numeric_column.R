@@ -20,7 +20,7 @@
 #' # Internal helper example for maintainers
 #' # Not intended for direct end-user invocation
 sby_internal_is_numeric_column <- function(x){
-  is.null(dim(x)) && is.numeric(x)
+  is.null(dim(x)) && (is.numeric(x) || is.logical(x))
 }
 ####
 ## End

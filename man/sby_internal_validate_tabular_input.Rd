@@ -4,10 +4,13 @@
 \alias{sby_internal_validate_tabular_input}
 \title{Internal Helper: Validate Tabular Input}
 \usage{
-sby_internal_validate_tabular_input(.data)
+sby_internal_validate_tabular_input(.data, validate_column_types = FALSE)
 }
 \arguments{
 \item{.data}{Candidate tabular object}
+
+\item{validate_column_types}{Whether to validate that the provided object only
+contains integer, double, or logical columns}
 }
 \value{
 The validated input object
