@@ -48,7 +48,7 @@ test_that("sby_select_correlation validates column types only after tidyselect",
 
   expect_error(
     sby_select_correlation(df, TARGET, threshold = 0.99),
-    "`.data` must contain only integer or double columns",
+    "`.data` must contain only integer, double, or logical columns",
     fixed = TRUE
   )
 })
@@ -67,4 +67,17 @@ test_that("sby_select_correlation is stable across OpenMP thread counts", {
   Sys.setenv(OMP_NUM_THREADS = "2", OMP_DYNAMIC = "FALSE")
   out_2 <- sby_select_correlation(df, threshold = 0.95)
   expect_identical(out_1, out_2)
+})
+
+test_that("sby_select_correlation accepts logical columns as binary inputs", {
+  df <- data.frame(
+    flag = c(TRUE, FALSE, TRUE, FALSE, TRUE, FALSE),
+    inverse_flag = c(FALSE, TRUE, FALSE, TRUE, FALSE, TRUE),
+    x = c(1, 2, 3, 4, 5, 6)
+  )
+
+  out <- sby_select_correlation(df, threshold = 0.99)
+
+  expect_equal(length(intersect(names(out), c("flag", "inverse_flag"))), 1L)
+  expect_true("x" %in% names(out))
 })

@@ -8,9 +8,18 @@
 #' @export
 sby_select_correlation <- function(.data, ..., threshold){
 
+  sby_internal_validate_tabular_input(.data = .data)
+  threshold <- sby_internal_validate_correlation_threshold(threshold = threshold)
+
   selected_columns <- sby_internal_eval_select(.data = .data, ..., default = "numeric")
 
-  numeric_matrix <- data.matrix(.data[, unname(selected_columns), drop = FALSE])
+  selected_data <- .data[, unname(selected_columns), drop = FALSE]
+  sby_internal_validate_tabular_input(
+    .data = selected_data,
+    validate_column_types = TRUE
+  )
+
+  numeric_matrix <- data.matrix(selected_data)
   storage.mode(numeric_matrix) <- "double"
 
   selected_strategy <- sby_internal_select_correlation_strategy(selected_data = numeric_matrix)

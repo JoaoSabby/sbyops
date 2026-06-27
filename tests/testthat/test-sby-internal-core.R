@@ -19,9 +19,23 @@ test_that("sby_internal_validate_tabular_input rejeita objetos nao tabulares", {
   expect_error(validate_tabular(NULL), "must be a data.frame")
 })
 
-test_that("sby_internal_validate_tabular_input rejeita colunas fora do contrato numerico", {
-  expect_error(validate_tabular(data.frame(a = 1:3, b = letters[1:3])), "integer or double")
-  expect_error(validate_tabular(matrix(TRUE, ncol = 1)), "integer or double")
+test_that("sby_internal_validate_tabular_input aceita logical e rejeita colunas fora do contrato", {
+  expect_identical(
+    validate_tabular(data.frame(a = c(TRUE, FALSE)), validate_column_types = TRUE),
+    data.frame(a = c(TRUE, FALSE))
+  )
+  expect_identical(
+    validate_tabular(matrix(TRUE, ncol = 1), validate_column_types = TRUE),
+    matrix(TRUE, ncol = 1)
+  )
+  expect_error(
+    validate_tabular(data.frame(a = 1:3, b = letters[1:3]), validate_column_types = TRUE),
+    "integer, double, or logical"
+  )
+  expect_error(
+    validate_tabular(matrix("x", ncol = 1), validate_column_types = TRUE),
+    "integer, double, or logical"
+  )
 })
 
 test_that("sby_internal_resolve_column_names repara nomes vazios e duplicados", {
@@ -37,9 +51,9 @@ test_that("sby_internal_resolve_column_names cria nomes deterministas para matri
 })
 
 test_that("sby_internal_eval_select aplica defaults e selecao explicita", {
-  df <- data.frame(a = 1:3, b = c(10, 20, 30), c = 4:6)
-  expect_identical(unname(eval_select(df, default = "all")), 1:3)
-  expect_identical(unname(eval_select(df, default = "numeric")), 1:3)
+  df <- data.frame(a = 1:3, b = c(10, 20, 30), c = 4:6, d = c(TRUE, FALSE, TRUE))
+  expect_identical(unname(eval_select(df, default = "all")), 1:4)
+  expect_identical(unname(eval_select(df, default = "numeric")), 1:4)
   expect_identical(names(eval_select(df, a, c, default = "all")), c("a", "c"))
 })
 
@@ -49,10 +63,10 @@ test_that("sby_internal_eval_select em matrix rejeita tidyselect", {
   expect_identical(eval_select(m, default = "all"), 1:2)
 })
 
-test_that("sby_internal_is_numeric_column valida vetores numericos e rejeita estruturas com dimensao", {
+test_that("sby_internal_is_numeric_column valida vetores numericos/logicos e rejeita estruturas com dimensao", {
   expect_true(is_numeric_column(1:3))
   expect_true(is_numeric_column(c(1, NA_real_)))
-  expect_false(is_numeric_column(TRUE))
+  expect_true(is_numeric_column(TRUE))
   expect_false(is_numeric_column(matrix(1:4, ncol = 2)))
 })
 

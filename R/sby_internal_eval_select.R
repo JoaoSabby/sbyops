@@ -46,7 +46,7 @@ sby_internal_eval_select <- function(.data, ..., default = c("all", "numeric")){
       numeric_mask <- vapply(
         X = .data,
         FUN = function(column_data){
-          is.null(dim(column_data)) && is.numeric(column_data)
+          is.null(dim(column_data)) && (is.numeric(column_data) || is.logical(column_data))
         },
         FUN.VALUE = logical(1L)
       )

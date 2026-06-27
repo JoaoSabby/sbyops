@@ -89,7 +89,7 @@ test_that("sby_select_modal_frequency validates column types only after tidysele
 
   expect_error(
     sby_select_modal_frequency(.data = modal_data, TARGET, threshold = 0.75),
-    "`.data` must contain only integer or double columns",
+    "`.data` must contain only integer, double, or logical columns",
     fixed = TRUE
   )
 })
@@ -100,4 +100,19 @@ test_that("Fortran sources use lowercase extensions only", {
 
   expect_true(length(fortran_files) > 0L)
   expect_false(any(grepl("\\.(F|F90|F95|F03|F08)$", fortran_files)))
+})
+
+test_that("sby_select_modal_frequency accepts logical columns", {
+  modal_data <- data.frame(
+    remove_logical = c(TRUE, TRUE, TRUE, FALSE),
+    keep_logical = c(TRUE, FALSE, TRUE, FALSE),
+    keep_numeric = 1:4
+  )
+
+  filtered_data <- sby_select_modal_frequency(
+    .data = modal_data,
+    threshold = 0.75
+  )
+
+  expect_identical(names(filtered_data), c("keep_logical", "keep_numeric"))
 })

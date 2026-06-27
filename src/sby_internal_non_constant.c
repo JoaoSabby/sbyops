@@ -6,7 +6,7 @@
 /**
  * @title Verifica se um vetor atomico e constante
  * @description Segue uma logica de saida rapida e encerra no primeiro valor diferente
- * @details O pacote privado do cliente processa somente colunas INTEGER e REAL
+ * @details O pacote privado do cliente processa somente colunas INTEGER, REAL e LOGICAL
  * @param x Vetor atomico sem dimensao
  * @return 1 quando a coluna e constante e 0 caso contrario
  */
@@ -25,6 +25,14 @@ static int sby_internal_is_constant_atomic(SEXP x) {
     }
     return 1;
   }
+  case LGLSXP: {
+    /* Compara todos os logicos com o primeiro valor, incluindo NA_LOGICAL */
+    int first = LOGICAL(x)[0];
+    for (R_xlen_t i = 1; i < n; ++i) {
+      if (LOGICAL(x)[i] != first) return 0;
+    }
+    return 1;
+  }
   case REALSXP: {
     /* Para double trata NA e NaN via ISNAN para semantica consistente */
     double first = REAL(x)[0];
@@ -40,7 +48,7 @@ static int sby_internal_is_constant_atomic(SEXP x) {
     return 1;
   }
   default:
-    Rf_error("sbyops expects only integer or double columns.");
+    Rf_error("sbyops expects only integer, double, or logical columns.");
     return 0;
   }
 }

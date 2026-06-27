@@ -7,7 +7,7 @@
 #' @param .data Candidate tabular object
 #'
 #' @param validate_column_types Whether to validate that the provided object only
-#' contains integer or double columns
+#' contains integer, double, or logical columns
 #'
 #' @return The validated input object
 sby_internal_validate_tabular_input <- function(.data, validate_column_types = FALSE){
@@ -18,20 +18,20 @@ sby_internal_validate_tabular_input <- function(.data, validate_column_types = F
   }
 
   if(isTRUE(validate_column_types)){
-    # This private package is deployed for a fixed client schema: only integer
-    # and double columns are accepted by the specialized native paths. The
+    # This private package is deployed for a fixed client schema: only integer,
+    # double, and logical columns are accepted by the specialized native paths. The
     # public selectors call this branch only after tidyselect has reduced the
     # input to the columns that will actually be evaluated.
     if(is.matrix(.data)){
-      if(!(is.integer(.data) || is.double(.data))){
-        stop("`.data` must contain only integer or double columns", call. = FALSE)
+      if(!(is.integer(.data) || is.double(.data) || is.logical(.data))){
+        stop("`.data` must contain only integer, double, or logical columns", call. = FALSE)
       }
     } else {
       valid_columns <- vapply(.data, function(current_column){
-        is.integer(current_column) || is.double(current_column)
+        is.integer(current_column) || is.double(current_column) || is.logical(current_column)
       }, logical(1L))
       if(!all(valid_columns)){
-        stop("`.data` must contain only integer or double columns", call. = FALSE)
+        stop("`.data` must contain only integer, double, or logical columns", call. = FALSE)
       }
     }
   }

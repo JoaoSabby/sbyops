@@ -39,7 +39,7 @@ test_that("sby_select_non_constant validates column types only after tidyselect"
 
   expect_error(
     sby_select_non_constant(df, TARGET),
-    "`.data` must contain only integer or double columns",
+    "`.data` must contain only integer, double, or logical columns",
     fixed = TRUE
   )
 })
@@ -73,4 +73,18 @@ test_that("sby_select_non_constant handles NA and NaN as constant when all are m
   expect_true("mix_na_value" %in% names(out))
   expect_true("mix_nan_value" %in% names(out))
   expect_true("varying" %in% names(out))
+})
+
+test_that("sby_select_non_constant accepts logical columns", {
+  df <- data.frame(
+    constant_true = c(TRUE, TRUE, TRUE, TRUE),
+    constant_na = c(NA, NA, NA, NA),
+    varying_logical = c(TRUE, FALSE, TRUE, FALSE),
+    mixed_missing = c(TRUE, NA, TRUE, TRUE),
+    numeric_keep = 1:4
+  )
+
+  out <- sby_select_non_constant(df)
+
+  expect_named(out, c("varying_logical", "mixed_missing", "numeric_keep"))
 })

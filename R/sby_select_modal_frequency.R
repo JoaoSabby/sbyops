@@ -56,6 +56,10 @@ sby_select_modal_frequency <- function(.data, ..., threshold = 0.99){
 
   # Materialize selected columns once before computing modal frequencies
   selected_data <- .data[, unname(selected_columns), drop = FALSE]
+  sby_internal_validate_tabular_input(
+    .data = selected_data,
+    validate_column_types = TRUE
+  )
   column_data <- as.data.frame(selected_data, stringsAsFactors = FALSE)
   cutoff <- ceiling(threshold * n_rows)
   count_occur <- kit::countOccur
