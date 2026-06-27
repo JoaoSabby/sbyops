@@ -61,11 +61,76 @@ sby_internal_eval_select <- function(.data, ..., default = c("all", "numeric")){
     return(selected_indexes)
   }
 
-  # Evaluate user-provided selectors against data columns
-  selected_indexes <- tidyselect::eval_select(rlang::expr(c(!!!selector_expressions)), .data)
+  # Evaluate user-provided selectors against data columns. External character
+  # vectors may be injected with `!!` by callers and can contain bookkeeping
+  # columns that are not present in the current data. In that case, retry with
+  # those injected vectors limited to existing columns while keeping ordinary
+  # tidyselect expressions strict.
+  selection_expression <- rlang::expr(c(!!!selector_expressions))
+  selected_indexes <- tryCatch(
+    tidyselect::eval_select(selection_expression, .data),
+    vctrs_error_subscript_oob = function(error){
+      repaired_selectors <- lapply(
+        selector_expressions,
+        sby_internal_prune_injected_character_selector,
+        column_names = names(.data)
+      )
+      repaired_expression <- rlang::expr(c(!!!repaired_selectors))
+      tidyselect::eval_select(repaired_expression, .data)
+    }
+  )
 
   # Return explicit selection indexes for downstream slicing
   return(selected_indexes)
+}
+
+#' @title Internal Helper: Prune Injected Character Selectors
+#'
+#' @description Limit injected character vectors to columns present in data
+#'
+#' @param selector A quosure captured from tidyselect dots
+#'
+#' @param column_names Existing column names
+#'
+#' @return A quosure with injected character vectors pruned
+sby_internal_prune_injected_character_selector <- function(selector, column_names){
+  selector_expression <- rlang::quo_get_expr(selector)
+  repaired_expression <- sby_internal_prune_character_expression(
+    selector_expression,
+    column_names = column_names
+  )
+
+  rlang::quo_set_expr(selector, repaired_expression)
+}
+
+#' @title Internal Helper: Prune Character Expression
+#'
+#' @description Recursively remove missing names from literal character vectors
+#'
+#' @param expression A language object or atomic vector
+#'
+#' @param column_names Existing column names
+#'
+#' @return A repaired expression object
+sby_internal_prune_character_expression <- function(expression, column_names){
+  if(is.character(expression)){
+    return(intersect(expression, column_names))
+  }
+
+  if(!is.call(expression)){
+    return(expression)
+  }
+
+  repaired_call <- as.list(expression)
+  if(length(repaired_call) > 1L){
+    repaired_call[-1L] <- lapply(
+      repaired_call[-1L],
+      sby_internal_prune_character_expression,
+      column_names = column_names
+    )
+  }
+
+  as.call(repaired_call)
 }
 ####
 ## End
