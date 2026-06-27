@@ -88,3 +88,29 @@ test_that("sby_select_non_constant accepts logical columns", {
 
   expect_named(out, c("varying_logical", "mixed_missing", "numeric_keep"))
 })
+
+test_that("sby_select_non_constant ignores absent injected character selectors", {
+  df <- data.frame(
+    TARGET = c(0L, 1L, 0L, 1L),
+    feature = 1:4,
+    constant = rep(7L, 4)
+  )
+  columnsKeyContext <- c(
+    "SEQUENCIA_CLIENTE",
+    "DATA_REFERENCIA_TARGET",
+    "TARGET"
+  )
+
+  out <- sby_select_non_constant(
+    df,
+    TARGET,
+    -!!columnsKeyContext
+  )
+  expect_named(out, c("TARGET", "feature", "constant"))
+
+  out2 <- sby_select_non_constant(
+    df,
+    -!!columnsKeyContext
+  )
+  expect_named(out2, c("TARGET", "feature"))
+})
