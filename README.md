@@ -39,9 +39,10 @@ O núcleo de inferência crítico permanece em C++ e backend Arrow nativo.
 
 ## Configuração oficial de threads
 
-O pacote usa **um único parâmetro oficial** para limite de threads:
+O pacote usa `sby_config_max_threads` como parâmetro global oficial para limite de threads. Funções que aceitam `num_treads` podem sobrescrever esse valor apenas para a chamada corrente.
 
 - `sby_config_max_threads`
+- `num_treads` por chamada, quando disponível
 
 Configuração:
 
@@ -61,7 +62,7 @@ Durante operações intensivas, o pacote executa um ciclo de contexto:
    - variáveis de ambiente de OpenMP/BLAS (como `OMP_NUM_THREADS`, `MKL_NUM_THREADS`, `OPENBLAS_NUM_THREADS`, `BLIS_NUM_THREADS`),
    - opções R relevantes (`mc.cores`, `Ncpus`),
    - estado de threads via `RhpcBLASctl` quando disponível.
-2. **Aplica** temporariamente `sby_config_max_threads`
+2. **Aplica** temporariamente `num_treads` quando informado pela função externa; caso contrário, usa `sby_config_max_threads`
    - OpenMP: define limites e desativa dinâmica (`OMP_DYNAMIC=FALSE`),
    - BLAS: define variáveis de backend e tenta aplicar setters via `RhpcBLASctl`,
    - sessão R: `options(mc.cores=..., Ncpus=...)`.
