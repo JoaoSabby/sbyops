@@ -3,10 +3,13 @@
 #' @param .data A data frame or tibble
 #' @param ... Tidyselect expressions
 #' @param threshold A numeric scalar in `[0, 1]`
+#' @param num_treads Optional positive integer scalar thread cap for this call.
+#'   When supplied, it overrides `sby_config_max_threads` without changing the
+#'   stored package configuration.
 #' @return `.data` with correlated columns removed
 #' @importFrom cli cli_alert_info
 #' @export
-sby_select_correlation <- function(.data, ..., threshold){
+sby_select_correlation <- function(.data, ..., threshold, num_treads = NULL){
 
   sby_internal_validate_tabular_input(.data = .data)
   threshold <- sby_internal_validate_correlation_threshold(threshold = threshold)
@@ -24,7 +27,11 @@ sby_select_correlation <- function(.data, ..., threshold){
 
   selected_strategy <- sby_internal_select_correlation_strategy(selected_data = numeric_matrix)
 
-  requested_threads <- sby_internal_get_max_threads()
+  requested_threads <- if(is.null(num_treads)){
+    sby_internal_get_max_threads()
+  } else {
+    sby_internal_validate_max_threads(num_treads)
+  }
   context <- sby_internal_capture_thread_context(
     useOpenmp = selected_strategy == "fortran",
     useBlas   = selected_strategy == "fortran"

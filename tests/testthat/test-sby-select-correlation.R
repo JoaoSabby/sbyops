@@ -81,3 +81,31 @@ test_that("sby_select_correlation accepts logical columns as binary inputs", {
   expect_equal(length(intersect(names(out), c("flag", "inverse_flag"))), 1L)
   expect_true("x" %in% names(out))
 })
+
+test_that("sby_select_correlation validates num_treads", {
+  df <- data.frame(a = 1:20, b = 2 * (1:20), c = rnorm(20))
+  expect_error(sby_select_correlation(df, threshold = 0.9, num_treads = 0), "positive integer scalar")
+  expect_error(sby_select_correlation(df, threshold = 0.9, num_treads = c(1, 2)), "positive integer scalar")
+  expect_error(sby_select_correlation(df, threshold = 0.9, num_treads = NA_real_), "positive integer scalar")
+})
+
+test_that("sby_select_correlation num_treads overrides configured max threads", {
+  skip_on_cran()
+  old <- options(sby_config_start_fortran = 1L, sby_config_max_threads = 1L)
+  on.exit(options(old), add = TRUE)
+
+  old_captured_threads <- getOption("sbyops_test_captured_threads")
+  on.exit(options(sbyops_test_captured_threads = old_captured_threads), add = TRUE)
+  trace(
+    what = "sby_internal_apply_thread_context",
+    tracer = quote(options(sbyops_test_captured_threads = maxThreads)),
+    print = FALSE,
+    where = asNamespace("sbyops")
+  )
+  on.exit(untrace("sby_internal_apply_thread_context", where = asNamespace("sbyops")), add = TRUE)
+
+  df <- data.frame(a = 1:20, b = 2 * (1:20), c = rnorm(20))
+  sby_select_correlation(df, threshold = 0.9, num_treads = 3L)
+
+  expect_identical(getOption("sbyops_test_captured_threads"), 3L)
+})
