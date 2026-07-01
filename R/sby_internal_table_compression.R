@@ -13,32 +13,36 @@
 #'
 #' @return Selected codec name.
 #'
-#' @importFrom arrow codec_is_available
 #'
 #' @keywords internal
 sby_internal_table_compression <- function(){
-  
+
+  # Require arrow only when Parquet compression support is evaluated
+  if(!requireNamespace("arrow", quietly = TRUE)){
+    stop("O pacote 'arrow' é necessário para avaliar a compressão Parquet. Instale com install.packages('arrow').")
+  }
+
   # Obtain the codec defined by an advanced user
   compression <- getOption("sby_parquet_compression", NULL)
-  
+
   # Use the provided codec when it is available
   if(!is.null(compression)){
     if(compression == "uncompressed"){
       return("uncompressed")
     }
-    
-    if(codec_is_available(compression)){
+
+    if(arrow::codec_is_available(compression)){
       return(compression)
     }
-    
+
     stop(str_c("Unavailable compression codec: ", compression))
   }
-  
+
   # Prefer snappy for its balance between CPU cost and IO reduction
-  if(codec_is_available("snappy")){
+  if(arrow::codec_is_available("snappy")){
     return("snappy")
   }
-  
+
   # Use uncompressed output when snappy is unavailable
   return("uncompressed")
 }

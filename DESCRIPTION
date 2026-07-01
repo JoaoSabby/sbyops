@@ -25,7 +25,6 @@ SystemRequirements: OpenMP, Intel oneMKL (optional)
 URL: https://github.com/JoaoSabby/sbyops
 BugReports: https://github.com/JoaoSabby/sbyops/issues
 Imports:
-    arrow,
     cli,
     collapse,
     kit,
@@ -33,7 +32,7 @@ Imports:
     rlang,
     stringr,
     tidyselect,
-    testthat (>= 3.0.0),
+    testthat (>= 3.0.0)
 LinkingTo:
     Rcpp
 Suggests:
