@@ -9,7 +9,7 @@
 #' @section Internal contract:
 #' This function should be invoked by validated selector entry points
 #'
-#' @param .data A data frame, tibble, or matrix
+#' @param .data A data frame, tibble, data.table, or matrix
 #'
 #' @param ... Tidyselect expressions
 #'

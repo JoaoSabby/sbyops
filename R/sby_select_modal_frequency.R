@@ -14,7 +14,7 @@
 #' vetorizada em R para manter fallback previsível e evitar dependência de
 #' símbolos nativos em ambientes incompletos.
 #'
-#' @param .data Data frame, tibble ou matriz.
+#' @param .data Data frame, tibble, data.table ou matriz.
 #' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
 #' avaliadas.
 #' @param threshold Escalar numérico no intervalo fechado `[0, 1]`.
@@ -42,6 +42,10 @@ sby_select_modal_frequency <- function(.data, ..., threshold = 0.99){
   }
 
   # Normalize names for deterministic column removal and restoration
+  if(inherits(.data, "data.table") && requireNamespace("data.table", quietly = TRUE)){
+    .data <- data.table::copy(.data)
+  }
+
   resolved_names <- sby_internal_resolve_column_names(.data = .data)
   colnames(.data) <- resolved_names
 
@@ -58,7 +62,7 @@ sby_select_modal_frequency <- function(.data, ..., threshold = 0.99){
   }
 
   # Materialize selected columns once before computing modal frequencies
-  selected_data <- .data[, unname(selected_columns), drop = FALSE]
+  selected_data <- sby_internal_subset_columns(.data, unname(selected_columns))
   sby_internal_validate_tabular_input(
     .data = selected_data,
     validate_column_types = TRUE
@@ -86,7 +90,7 @@ sby_select_modal_frequency <- function(.data, ..., threshold = 0.99){
   # Remove only selected columns whose modal proportion reaches or exceeds the threshold
   removed_columns <- names(column_data)[!keep_mask]
   kept_columns <- setdiff(colnames(.data), removed_columns)
-  filtered_data <- .data[, kept_columns, drop = FALSE]
+  filtered_data <- sby_internal_subset_columns(.data, kept_columns)
 
   # Restore output class to match the original input structure
   return(

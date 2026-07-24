@@ -13,7 +13,7 @@
 #' contrário, uma implementação R segura é aplicada. Colunas fora da seleção são
 #' preservadas.
 #'
-#' @param .data Data frame, tibble ou matriz.
+#' @param .data Data frame, tibble, data.table ou matriz.
 #' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
 #' avaliadas.
 #'
@@ -34,6 +34,10 @@ sby_select_non_constant <- function(.data, ...){
     return(.data)
   }
 
+  if(inherits(.data, "data.table") && requireNamespace("data.table", quietly = TRUE)){
+    .data <- data.table::copy(.data)
+  }
+
   resolved_names <- sby_internal_resolve_column_names(.data = .data)
   colnames(.data) <- resolved_names
 
@@ -46,7 +50,7 @@ sby_select_non_constant <- function(.data, ...){
     return(.data)
   }
 
-  selected_data <- .data[, unname(selected_columns), drop = FALSE]
+  selected_data <- sby_internal_subset_columns(.data, unname(selected_columns))
   sby_internal_validate_tabular_input(
     .data = selected_data,
     validate_column_types = TRUE
@@ -56,7 +60,7 @@ sby_select_non_constant <- function(.data, ...){
   keep_mask <- sby_internal_non_constant_mask(selected_list)
   removed_columns <- colnames(selected_data)[!keep_mask]
   kept_columns <- setdiff(colnames(.data), removed_columns)
-  filtered_data <- .data[, kept_columns, drop = FALSE]
+  filtered_data <- sby_internal_subset_columns(.data, kept_columns)
 
   sby_internal_restore_selected_data(
     selected_data = filtered_data,

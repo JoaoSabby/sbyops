@@ -12,9 +12,9 @@
 #' @return The validated input object
 sby_internal_validate_tabular_input <- function(.data, validate_column_types = FALSE){
 
-  # Abort when input is not a data frame, tibble, or matrix
+  # Abort when input is not a data frame, tibble, data.table, or matrix
   if(!(inherits(.data, "data.frame") || is.matrix(.data))){
-    stop("`.data` must be a data.frame, tibble, or matrix", call. = FALSE)
+    stop("`.data` must be a data.frame, tibble, data.table, or matrix", call. = FALSE)
   }
 
   if(isTRUE(validate_column_types)){

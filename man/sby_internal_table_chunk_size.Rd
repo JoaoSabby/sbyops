@@ -7,7 +7,7 @@
 sby_internal_table_chunk_size(.data)
 }
 \arguments{
-\item{.data}{Object of class \code{data.frame} or \code{tibble}.}
+\item{.data}{Object of class \code{data.frame}, \code{tibble}, or \code{data.table}.}
 }
 \value{
 Integer with the number of rows per row group.

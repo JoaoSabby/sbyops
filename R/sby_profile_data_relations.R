@@ -35,7 +35,7 @@
 #' Kendall, M. G. (1938). A new measure of rank correlation. *Biometrika*,
 #' 30(1/2), 81--93.
 #'
-#' @param .data Data frame ou tibble.
+#' @param .data Data frame, tibble ou data.table.
 #' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
 #' perfiladas.
 #' @param max_rows Inteiro positivo ou `Inf`. Entradas maiores são amostradas de
@@ -109,7 +109,7 @@ sby_profile_data_relations <- function(
     )
   }
 
-  selectedData <- .data[, unname(selectedColumns), drop = FALSE]
+  selectedData <- sby_internal_subset_columns(.data, unname(selectedColumns))
 
   sby_internal_with_thread_context(
     expr = sby_internal_profile_with_data_table_threads(

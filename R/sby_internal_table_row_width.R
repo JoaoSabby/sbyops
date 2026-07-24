@@ -9,7 +9,7 @@
 #' variable-width columns, such as character columns, the function uses a
 #' deterministic row sample to avoid excessive overhead during writing.
 #'
-#' @param .data Object of class \code{data.frame} or \code{tibble}.
+#' @param .data Object of class \code{data.frame}, \code{tibble}, or \code{data.table}.
 #'
 #' @return Numeric value with the approximate average row width in bytes.
 #'

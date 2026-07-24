@@ -13,7 +13,7 @@ sby_profile_data_relations(
 )
 }
 \arguments{
-\item{.data}{Data frame ou tibble.}
+\item{.data}{Data frame, tibble ou data.table.}
 \item{...}{Expressões tidyselect. Quando omitidas, todas as colunas são avaliadas.}
 \item{max_rows}{Inteiro positivo ou \code{Inf}. Entradas maiores são amostradas deterministicamente.}
 \item{numeric_bins}{Número de intervalos por quantis usado na discretização para informação mútua.}

@@ -109,3 +109,14 @@ test_that("sby_select_correlation num_treads overrides configured max threads", 
 
   expect_identical(getOption("sbyops_test_captured_threads"), 3L)
 })
+
+test_that("sby_select_correlation supports data.table input", {
+  skip_if_not_installed("data.table")
+
+  dt <- data.table::data.table(a = 1:5, b = 1:5, c = c(1, 3, 2, 5, 4))
+
+  out <- sby_select_correlation(dt, threshold = 0.99)
+
+  expect_s3_class(out, "data.table")
+  expect_lt(ncol(out), ncol(dt))
+})

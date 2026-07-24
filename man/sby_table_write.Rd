@@ -4,7 +4,7 @@
 \title{Escrever tabela em Parquet com schema Arrow otimizado}
 \usage{sby_table_write(.data, file)}
 \arguments{
-\item{.data}{Data frame ou tibble a ser escrito.}
+\item{.data}{Data frame, tibble ou data.table a ser escrito.}
 \item{file}{Caminho completo de saída. A extensão \code{.parquet} é adicionada quando ausente.}
 }
 \value{Retorna \code{NULL} invisivelmente.}

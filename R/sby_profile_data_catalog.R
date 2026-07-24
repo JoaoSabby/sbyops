@@ -40,7 +40,7 @@
 #' Shannon, C. E. (1948). A mathematical theory of communication. *Bell System
 #' Technical Journal*, 27, 379--423.
 #'
-#' @param .data Data frame ou tibble.
+#' @param .data Data frame, tibble ou data.table.
 #' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
 #' perfiladas.
 #' @param bitmap_cardinality_ratio Razão máxima de cardinalidade distinta para
@@ -169,7 +169,7 @@ sby_profile_data_catalog <- function(
     return(tibble())
   }
 
-  selectedData <- .data[, unname(selectedColumns), drop = FALSE]
+  selectedData <- sby_internal_subset_columns(.data, unname(selectedColumns))
 
   sby_internal_with_thread_context(
     expr = sby_internal_profile_with_data_table_threads(
@@ -206,7 +206,7 @@ sby_profile_data_catalog <- function(
 #' dependem da tabela completa. A contagem de duplicatas pode ser desativada para
 #' reduzir custo em bases muito grandes.
 #'
-#' @param .data Data frame ou tibble.
+#' @param .data Data frame, tibble ou data.table.
 #' @param calculate_duplicate_rows Escalar lógico que indica se linhas
 #' duplicadas exatas devem ser contadas.
 #' @param num_treads Inteiro positivo opcional com limite temporário de threads.
@@ -269,7 +269,7 @@ sby_profile_data_set <- function(
 #' ajuda a identificar ausências estruturais, blocos de variáveis faltantes em
 #' conjunto e falhas recorrentes de integração.
 #'
-#' @param .data Data frame ou tibble.
+#' @param .data Data frame, tibble ou data.table.
 #' @param top_count Inteiro positivo com a quantidade máxima de padrões.
 #' @param num_treads Inteiro positivo opcional com limite temporário de threads.
 #'

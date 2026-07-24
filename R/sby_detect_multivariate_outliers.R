@@ -38,7 +38,7 @@
 #' Maronna, R. A.; Martin, R. D.; Yohai, V. J.; Salibián-Barrera, M. (2019).
 #' *Robust Statistics: Theory and Methods*. Wiley.
 #'
-#' @param .data Data frame ou tibble.
+#' @param .data Data frame, tibble ou data.table.
 #' @param ... Expressões tidyselect. O padrão seleciona colunas numéricas.
 #' @param alpha Probabilidade de cauda superior usada no corte qui-quadrado.
 #' @param max_fit_rows Tamanho máximo da amostra determinística para ajustar o
@@ -88,7 +88,7 @@ sby_detect_multivariate_outliers <- function(
     )
   }
 
-  selectedData <- .data[, unname(selectedColumns), drop = FALSE]
+  selectedData <- sby_internal_subset_columns(.data, unname(selectedColumns))
   sby_internal_validate_tabular_input(
     .data = selectedData,
     validate_column_types = TRUE

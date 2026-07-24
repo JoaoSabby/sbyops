@@ -6,7 +6,7 @@
 sby_profile_missing_patterns(.data, top_count = 20L, num_treads = NULL)
 }
 \arguments{
-\item{.data}{Data frame ou tibble.}
+\item{.data}{Data frame, tibble ou data.table.}
 \item{top_count}{Inteiro positivo com a quantidade máxima de padrões retornados.}
 \item{num_treads}{Inteiro positivo opcional com limite temporário de threads para a chamada.}
 }
