@@ -1,24 +1,27 @@
-#' @title Select Columns by Modal Frequency
+#' @title Selecionar colunas por frequência modal
 #'
 #' @usage
-#' sby_select_modal_frequency(
-#'   .data,
-#'   ...,
-#'   threshold = 0.99
-#' )
+#' sby_select_modal_frequency(.data, ..., threshold = 0.99)
 #'
-#' @description Remove selected columns whose most frequent value proportion is greater than or equal to a threshold
+#' @description
+#' Remove colunas cuja categoria ou valor mais frequente representa proporção
+#' maior ou igual ao limiar informado.
 #'
-#' @details Uses a direct R backend based on occurrence counts to avoid native symbol availability failures.
-#' Tidyselect expressions restrict which columns are evaluated by the modal-frequency algorithm; columns outside the selection are always retained.
+#' @details
+#' A ferramenta identifica variáveis praticamente constantes, mas ainda não
+#' estritamente constantes, por meio da frequência do valor modal. Colunas fora
+#' da seleção `tidyselect` são sempre preservadas. A implementação usa contagem
+#' vetorizada em R para manter fallback previsível e evitar dependência de
+#' símbolos nativos em ambientes incompletos.
 #'
-#' @param .data A data frame, tibble, or matrix
+#' @param .data Data frame, tibble ou matriz.
+#' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
+#' avaliadas.
+#' @param threshold Escalar numérico no intervalo fechado `[0, 1]`.
 #'
-#' @param ... Tidyselect expressions for data-frame-like inputs. When omitted, all columns are considered
-#'
-#' @param threshold A numeric scalar in the closed interval `[0, 1]`
-#'
-#' @return An object with the same structural class as `.data` with high modal-frequency columns removed
+#' @return Objeto com a mesma classe estrutural de `.data`, sem as colunas de
+#' alta frequência modal selecionadas.
+#' @seealso [sby_select_non_constant()], [sby_select_correlation()]
 #' @export
 sby_select_modal_frequency <- function(.data, ..., threshold = 0.99){
 

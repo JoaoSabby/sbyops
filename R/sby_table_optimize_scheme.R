@@ -1,43 +1,32 @@
-#' @title Optimize Arrow Schema for Parquet Writing
+#' @title Otimizar schema Arrow para escrita Parquet
 #'
 #' @description
-#' Inspects the columns of a \code{data.frame} or \code{tibble} and returns an
-#' optimized Arrow \code{Schema} for Parquet writing.
+#' Inspeciona colunas de um data frame ou tibble e retorna um schema Arrow
+#' compacto para escrita analítica em Parquet.
 #'
 #' @details
-#' The function defines compact Arrow types from the observed content of each
-#' column. Logical variables are mapped to \code{arrow::boolean()}, character variables
-#' to \code{arrow::utf8()}, factors to \code{arrow::dictionary()}, and dates to
-#' \code{arrow::date32()}.
+#' A ferramenta mapeia tipos R para representações Arrow seguras, usando
+#' dicionários para fatores, UTF-8 para texto, `date32` para datas e tipos
+#' inteiros compactos quando os valores observados permitem. Colunas numéricas
+#' são avaliadas por rotinas C++ para reduzir passagens sobre os dados.
 #'
-#' For \code{double} columns, the function uses
-#' \code{sby_internal_table_detect_numeric_type()}, implemented in C++ through
-#' Rcpp, to collect metadata in a single pass.
+#' Valores `Inf` e `-Inf` impedem compactação para tipos inteiros. Números reais
+#' com aparência inteira são compactados somente quando permanecem dentro do
+#' intervalo de representação exata de doubles.
 #'
-#' For integer columns, the function uses
-#' \code{sby_internal_table_detect_integer_type()}, also implemented in C++,
-#' to avoid separate calls for minimum, maximum, and boolean feasibility checks.
+#' @param .data Data frame ou tibble cujas colunas serão analisadas.
 #'
-#' Integer type compaction respects the representation limits of Arrow integer
-#' types. Values \code{Inf} and \code{-Inf} prevent conversion to integer
-#' types. Integer-like \code{double} values are compacted only within the
-#' exact-representation range (\code{2^.Machine$double.digits}); values above
-#' this bound are preserved as \code{arrow::float64()}.
-#'
-#' @param .data Object of class \code{data.frame} or \code{tibble} containing
-#' the columns to be analyzed.
-#'
-#' @return Arrow \code{Schema} object.
+#' @return Objeto `arrow::Schema` otimizado.
 #'
 #' @usage sby_table_optimize_scheme(.data)
 #'
 #' @examples
 #' \dontrun{
-#' schema_arrow <- sby_table_optimize_scheme(.data = data)
+#' schema_arrow <- sby_table_optimize_scheme(.data = dados)
 #' }
 #'
+#' @seealso [sby_table_write()]
 #' @importFrom stringr str_c
-#'
 #' @export
 sby_table_optimize_scheme <- function(.data){
 

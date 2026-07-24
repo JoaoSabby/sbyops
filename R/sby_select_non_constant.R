@@ -1,17 +1,24 @@
-#' @title Remove Constant Columns
+#' @title Remover colunas constantes
 #' @name sby_select_non_constant
 #'
 #' @usage sby_select_non_constant(.data, ...)
 #'
-#' @description Remove selected columns that contain a single repeated value across all observations
+#' @description
+#' Remove colunas selecionadas que contêm um único valor repetido ao longo de
+#' todas as observações.
 #'
-#' @details The native C backend evaluates each selected column and supports column-parallel execution when OpenMP is available
+#' @details
+#' A ferramenta é uma etapa inicial de limpeza para reduzir variáveis sem
+#' informação amostral. O backend nativo em C é usado quando disponível; caso
+#' contrário, uma implementação R segura é aplicada. Colunas fora da seleção são
+#' preservadas.
 #'
-#' @param .data A data frame, tibble, or matrix
+#' @param .data Data frame, tibble ou matriz.
+#' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
+#' avaliadas.
 #'
-#' @param ... Tidyselect expressions for data-frame-like inputs. When omitted, all columns are considered
-#'
-#' @return An object with the same structural class as `.data` without selected constant columns
+#' @return Objeto com a mesma classe estrutural de `.data`, sem as colunas
+#' constantes selecionadas.
 #'
 #' @seealso [sby_select_correlation()], [sby_select_modal_frequency()]
 #'

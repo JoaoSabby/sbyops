@@ -1,4 +1,4 @@
-#' @title Detect Multivariate Outliers with Robust MCD
+#' @title Detectar outliers multivariados com MCD robusto
 #'
 #' @usage
 #' sby_detect_multivariate_outliers(
@@ -10,21 +10,42 @@
 #' )
 #'
 #' @description
-#' Fit a minimum covariance determinant estimator and return robust
-#' Mahalanobis distances for complete finite rows.
+#' Detecta observações atípicas multivariadas por distância de Mahalanobis
+#' robusta estimada pelo determinante mínimo da covariância, ou MCD.
 #'
 #' @details
-#' The estimator must be fitted only on training data when its distances or
-#' flags are used by a predictive model. The function uses the sbyops BLAS
-#' thread context, allowing the active oneMKL backend to respect `num_treads`.
+#' A rotina calcula, para as linhas completas e finitas, a estatística
+#' \(D_i^2=(x_i-\hat\mu_R)^\top\hat\Sigma_R^{-1}(x_i-\hat\mu_R)\),
+#' em que \(\hat\mu_R\) e \(\hat\Sigma_R\) são estimadores robustos de
+#' localização e dispersão. O ponto de corte é o quantil superior da
+#' distribuição \(\chi^2_p\), com \(p\) variáveis selecionadas. Linhas com
+#' valores ausentes ou infinitos são preservadas no resultado, porém recebem
+#' distância e indicador indefinidos.
 #'
-#' @param .data A data frame or tibble.
-#' @param ... Tidyselect expressions. The default selects numeric columns.
-#' @param alpha Upper-tail probability used for the chi-squared cutoff.
-#' @param max_fit_rows Maximum deterministic sample size used to fit MCD.
-#' @param num_treads Optional positive integer thread cap for this call.
+#' O ajuste é determinístico quando `max_fit_rows` impõe amostragem sistemática.
+#' Isso evita custo cúbico desnecessário em bases muito altas e torna a rotina
+#' reproduzível em pipelines. O estimador deve ser ajustado apenas em dados de
+#' treino quando a saída for usada em modelagem preditiva, pois sua aplicação
+#' prévia em todo o conjunto pode induzir vazamento de informação.
 #'
-#' @return A tibble with one row per input row.
+#' @references
+#' Rousseeuw, P. J. (1985). Multivariate estimation with high breakdown point.
+#' In *Mathematical Statistics and Applications*. Reidel.
+#'
+#' Rousseeuw, P. J.; Van Driessen, K. (1999). A fast algorithm for the minimum
+#' covariance determinant estimator. *Technometrics*, 41(3), 212--223.
+#'
+#' Maronna, R. A.; Martin, R. D.; Yohai, V. J.; Salibián-Barrera, M. (2019).
+#' *Robust Statistics: Theory and Methods*. Wiley.
+#'
+#' @param .data Data frame ou tibble.
+#' @param ... Expressões tidyselect. O padrão seleciona colunas numéricas.
+#' @param alpha Probabilidade de cauda superior usada no corte qui-quadrado.
+#' @param max_fit_rows Tamanho máximo da amostra determinística para ajustar o
+#' MCD.
+#' @param num_treads Inteiro positivo opcional com limite temporário de threads.
+#'
+#' @return Tibble com uma linha por observação da entrada.
 #'
 #' @importFrom robustbase covMcd
 #' @importFrom stats complete.cases mahalanobis qchisq sd
@@ -36,6 +57,8 @@ sby_detect_multivariate_outliers <- function(
   max_fit_rows = 50000L,
   num_treads = NULL
 ){
+  # Select and validate numeric columns before matrix conversion because MCD
+  # requires a finite multivariate numeric geometry with non-singular scale.
   sby_internal_validate_tabular_input(.data = .data)
 
   alphaValue <- sby_internal_profile_validate_probability(

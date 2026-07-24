@@ -1,12 +1,24 @@
-#' @title Select Columns by Pearson Correlation
-#' @description Remove selected numeric columns that exceed a Pearson correlation threshold
-#' @param .data A data frame or tibble
-#' @param ... Tidyselect expressions
-#' @param threshold A numeric scalar in `[0, 1]`
-#' @param num_treads Optional positive integer scalar thread cap for this call.
-#'   When supplied, it overrides `sby_config_max_threads` without changing the
-#'   stored package configuration.
-#' @return `.data` with correlated columns removed
+#' @title Selecionar colunas por correlação de Pearson
+#'
+#' @description
+#' Remove colunas numéricas redundantes quando a correlação absoluta de Pearson
+#' atinge ou excede um limiar definido pelo usuário.
+#'
+#' @details
+#' A função seleciona colunas numéricas por `tidyselect`, calcula dependência
+#' linear par a par e remove, em cada conflito, a variável com maior correlação
+#' média absoluta contra as demais candidatas ativas. A estratégia de execução é
+#' escolhida automaticamente entre rotinas de streaming, Fortran e BLAS, de
+#' acordo com os limiares configurados por [sby_config()].
+#'
+#' @param .data Data frame, tibble ou matriz numericamente compatível.
+#' @param ... Expressões tidyselect. Quando omitidas, colunas numéricas são
+#' avaliadas.
+#' @param threshold Escalar numérico em `[0, 1]` usado como limiar de remoção.
+#' @param num_treads Inteiro positivo opcional com limite temporário de threads.
+#'
+#' @return Objeto tabular com colunas correlacionadas removidas.
+#' @seealso [sby_select_non_constant()], [sby_select_modal_frequency()]
 #' @importFrom cli cli_alert_info
 #' @export
 sby_select_correlation <- function(.data, ..., threshold, num_treads = NULL){

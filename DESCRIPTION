@@ -27,16 +27,21 @@ BugReports: https://github.com/JoaoSabby/sbyops/issues
 Imports:
     cli,
     collapse,
+    data.table,
     kit,
     Rcpp,
     rlang,
+    robustbase,
+    stringi,
     stringr,
+    tibble,
     tidyselect,
     testthat (>= 3.0.0)
 LinkingTo:
     Rcpp
 Suggests:
-    tibble,
+    gamlss,
+    gamlss.dist,
     RhpcBLASctl
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0

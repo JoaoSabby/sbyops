@@ -1,4 +1,4 @@
-#' @title Profile Tabular Data for Modeling and Oracle
+#' @title Catalogar variáveis tabulares para modelagem e Oracle
 #'
 #' @usage
 #' sby_profile_data_catalog(
@@ -12,34 +12,47 @@
 #' )
 #'
 #' @description
-#' Build a column-level data catalog with descriptive statistics, missingness,
-#' cardinality, text quality, outlier diagnostics, model-readiness flags, and
-#' data-only Oracle recommendations.
+#' Constrói um catálogo técnico de variáveis para bases tabulares, combinando
+#' metadados de tipo, nulidade, cardinalidade, estatística descritiva, qualidade
+#' textual, diagnóstico robusto de outliers e sinais físicos para Oracle.
 #'
 #' @details
-#' The input is converted to a private `data.table` container and is never
-#' modified by reference. The result is always a tibble. Oracle index,
-#' histogram, compression, and partitioning fields are screening signals.
-#' Workload metadata and database optimizer statistics remain required before
-#' applying physical changes.
+#' Cada coluna selecionada é analisada isoladamente. Variáveis numéricas recebem
+#' medidas de posição, escala, assimetria, curtose, quantis, detecção de
+#' inteiros empíricos, intervalos bayesianos sob modelo normal com prior de
+#' Jeffreys e regras robustas de outliers, incluindo boxplot ajustado por
+#' medcouple. Variáveis textuais recebem medidas de comprimento, normalização
+#' Unicode, espaços, caixa, vazios semânticos e potenciais problemas de
+#' armazenamento.
 #'
-#' Parallel resources are controlled by the existing sbyops thread context.
-#' In a dynamically branched `targets` pipeline, set `num_treads = 1L` unless
-#' worker-level resource allocation explicitly reserves more threads.
+#' Os campos relacionados a bitmap, particionamento, compressão, histograma e
+#' índices Oracle são sinais derivados somente dos dados. Eles não substituem
+#' workload SQL, seletividade real, estatísticas do otimizador ou validação de
+#' engenharia de banco de dados. O processamento usa `data.table` em cópia
+#' privada e respeita o contexto de threads do `sbyops`.
 #'
-#' @param .data A data frame or tibble.
-#' @param ... Tidyselect expressions. When omitted, all columns are profiled.
-#' @param bitmap_cardinality_ratio Maximum distinct-value ratio used only to
-#' flag low-cardinality bitmap candidates.
-#' @param bitmap_minimum_rows Minimum row count used by the bitmap screening
-#' rule.
-#' @param partition_minimum_rows Minimum row count used by the date partition
-#' screening rule.
-#' @param max_robust_sample Maximum deterministic sample size used to estimate
-#' the medcouple statistic.
-#' @param num_treads Optional positive integer thread cap for this call.
+#' @references
+#' Tukey, J. W. (1977). *Exploratory Data Analysis*. Addison-Wesley.
 #'
-#' @return A tibble with one row per selected column.
+#' Hubert, M.; Vandervieren, E. (2008). An adjusted boxplot for skewed
+#' distributions. *Computational Statistics & Data Analysis*, 52, 5186--5201.
+#'
+#' Shannon, C. E. (1948). A mathematical theory of communication. *Bell System
+#' Technical Journal*, 27, 379--423.
+#'
+#' @param .data Data frame ou tibble.
+#' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
+#' perfiladas.
+#' @param bitmap_cardinality_ratio Razão máxima de cardinalidade distinta para
+#' triagem de candidatas a bitmap.
+#' @param bitmap_minimum_rows Número mínimo de linhas usado pela regra bitmap.
+#' @param partition_minimum_rows Número mínimo de linhas usado pela regra de
+#' particionamento por data.
+#' @param max_robust_sample Tamanho máximo da amostra determinística usada para
+#' estimar o medcouple.
+#' @param num_treads Inteiro positivo opcional com limite temporário de threads.
+#'
+#' @return Tibble com uma linha por coluna selecionada.
 #'
 #' @importFrom collapse fmean fmedian fquantile fsd fsum
 #' @importFrom data.table as.data.table getDTthreads rbindlist
@@ -61,6 +74,8 @@ sby_profile_data_catalog <- function(
   max_robust_sample = 100000L,
   num_treads = NULL
 ){
+  # Validate all scalar controls before any expensive copy to fail fast and keep
+  # memory pressure predictable for very large tabular inputs.
   sby_internal_validate_tabular_input(.data = .data)
 
   bitmapCardinalityRatio <- sby_internal_profile_validate_probability(
@@ -114,7 +129,7 @@ sby_profile_data_catalog <- function(
   )
 }
 
-#' @title Profile Dataset-Level Structure
+#' @title Perfilar estrutura global do conjunto de dados
 #'
 #' @usage
 #' sby_profile_data_set(
@@ -124,15 +139,20 @@ sby_profile_data_catalog <- function(
 #' )
 #'
 #' @description
-#' Summarize dataset dimensions, memory use, missing cells, complete rows, and
-#' duplicate rows.
+#' Resume dimensões, uso aproximado de memória, células ausentes, linhas
+#' completas e duplicidade exata do conjunto de dados.
 #'
-#' @param .data A data frame or tibble.
-#' @param calculate_duplicate_rows Logical scalar indicating whether exact
-#' duplicate rows should be counted.
-#' @param num_treads Optional positive integer thread cap for this call.
+#' @details
+#' Esta ferramenta complementa o catálogo por coluna ao medir propriedades que
+#' dependem da tabela completa. A contagem de duplicatas pode ser desativada para
+#' reduzir custo em bases muito grandes.
 #'
-#' @return A one-row tibble.
+#' @param .data Data frame ou tibble.
+#' @param calculate_duplicate_rows Escalar lógico que indica se linhas
+#' duplicadas exatas devem ser contadas.
+#' @param num_treads Inteiro positivo opcional com limite temporário de threads.
+#'
+#' @return Tibble de uma linha com métricas estruturais do dataset.
 #'
 #' @export
 sby_profile_data_set <- function(
@@ -173,7 +193,7 @@ sby_profile_data_set <- function(
   )
 }
 
-#' @title Profile Missingness Patterns
+#' @title Perfilar padrões de nulidade
 #'
 #' @usage
 #' sby_profile_missing_patterns(
@@ -183,13 +203,18 @@ sby_profile_data_set <- function(
 #' )
 #'
 #' @description
-#' Return the most frequent row-level combinations of missing columns.
+#' Retorna as combinações de colunas ausentes mais frequentes em nível de linha.
 #'
-#' @param .data A data frame or tibble.
-#' @param top_count Positive integer with the maximum number of patterns.
-#' @param num_treads Optional positive integer thread cap for this call.
+#' @details
+#' Cada coluna contribui com um indicador binário no padrão de nulidade. A saída
+#' ajuda a identificar ausências estruturais, blocos de variáveis faltantes em
+#' conjunto e falhas recorrentes de integração.
 #'
-#' @return A tibble ordered by decreasing pattern frequency.
+#' @param .data Data frame ou tibble.
+#' @param top_count Inteiro positivo com a quantidade máxima de padrões.
+#' @param num_treads Inteiro positivo opcional com limite temporário de threads.
+#'
+#' @return Tibble ordenado por frequência decrescente do padrão.
 #'
 #' @export
 sby_profile_missing_patterns <- function(

@@ -1,4 +1,4 @@
-#' @title Profile Pairwise Data Relations
+#' @title Perfilar relações bivariadas entre colunas
 #'
 #' @usage
 #' sby_profile_data_relations(
@@ -11,31 +11,42 @@
 #' )
 #'
 #' @description
-#' Measure pairwise statistical dependence, redundancy, missingness
-#' association, functional dependencies, and data-only Oracle column-group
-#' signals.
+#' Mede relações bivariadas entre colunas por correlações, associação categórica,
+#' razão de correlação, informação mútua normalizada, nulidade conjunta e
+#' dependências funcionais empíricas.
 #'
 #' @details
-#' Numeric pairs receive Pearson, Spearman, and sampled Kendall correlations.
-#' Categorical pairs receive corrected Cramer's V. Mixed pairs receive the
-#' correlation ratio. Every supported pair receives normalized mutual
-#' information after numeric discretization.
+#' Pares numéricos recebem correlações de Pearson, Spearman e Kendall amostral.
+#' Pares categóricos recebem V de Cramér corrigido para viés. Pares mistos usam
+#' \(\eta^2\), a proporção da variabilidade numérica explicada por grupos.
+#' Todos os pares válidos recebem informação mútua após discretização por
+#' quantis quando necessário.
 #'
-#' Strong relations and functional dependencies can indicate redundant
-#' predictors or leakage. Oracle extended-statistics fields are screening
-#' signals only. SQL workload and optimizer column usage remain required.
-#' The number of pairs grows quadratically, so wide inputs should use `...`
-#' to select a relevant subset or branch the work in `targets`.
+#' A cardinalidade de pares cresce como \(p(p-1)/2\). Por isso, recomenda-se
+#' selecionar subconjuntos de colunas em bases largas. Os sinais de redundância,
+#' vazamento e extended statistics Oracle são heurísticos e exigem validação com
+#' semântica de negócio, tempo de referência e workload SQL.
 #'
-#' @param .data A data frame or tibble.
-#' @param ... Tidyselect expressions. When omitted, all columns are profiled.
-#' @param max_rows Positive integer or `Inf`. Larger inputs are sampled
-#' deterministically.
-#' @param numeric_bins Number of quantile bins used for mutual information.
-#' @param strong_relation_threshold Threshold in `(0, 1)` for screening.
-#' @param num_treads Optional positive integer thread cap for this call.
+#' @references
+#' Cramér, H. (1946). *Mathematical Methods of Statistics*. Princeton.
 #'
-#' @return A tibble with one row per column pair.
+#' Cover, T. M.; Thomas, J. A. (2006). *Elements of Information Theory*. Wiley.
+#'
+#' Kendall, M. G. (1938). A new measure of rank correlation. *Biometrika*,
+#' 30(1/2), 81--93.
+#'
+#' @param .data Data frame ou tibble.
+#' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
+#' perfiladas.
+#' @param max_rows Inteiro positivo ou `Inf`. Entradas maiores são amostradas de
+#' forma determinística.
+#' @param numeric_bins Número de intervalos por quantis usado na informação
+#' mútua.
+#' @param strong_relation_threshold Limiar em `(0, 1)` para triagem de relação
+#' forte.
+#' @param num_treads Inteiro positivo opcional com limite temporário de threads.
+#'
+#' @return Tibble com uma linha por par de colunas.
 #'
 #' @importFrom stats cor
 #' @importFrom utils combn
@@ -48,6 +59,8 @@ sby_profile_data_relations <- function(
   strong_relation_threshold = 0.8,
   num_treads = NULL
 ){
+  # Resolve and sample the selected table before pair enumeration so the
+  # quadratic relation scan remains reproducible and bounded in runtime.
   sby_internal_validate_tabular_input(.data = .data)
 
   maxRows <- if(
