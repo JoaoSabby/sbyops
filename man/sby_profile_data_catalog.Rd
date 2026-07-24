@@ -14,7 +14,7 @@ sby_profile_data_catalog(
 )
 }
 \arguments{
-\item{.data}{Data frame, tibble ou data.table.}
+\item{.data}{Tabela DuckDB, data frame, tibble ou data.table.}
 \item{...}{Expressões tidyselect. Quando omitidas, todas as colunas são perfiladas.}
 \item{bitmap_cardinality_ratio}{Razão máxima de cardinalidade distinta usada para sinalizar candidatas a bitmap.}
 \item{bitmap_minimum_rows}{Número mínimo de linhas usado pela regra de triagem para bitmap.}

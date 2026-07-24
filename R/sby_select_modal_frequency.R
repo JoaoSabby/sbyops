@@ -14,19 +14,20 @@
 #' vetorizada em R para manter fallback previsível e evitar dependência de
 #' símbolos nativos em ambientes incompletos.
 #'
-#' @param .data Data frame, tibble, data.table ou matriz.
+#' @param .data Tabela DuckDB, data frame, tibble, data.table ou matriz.
 #' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
 #' avaliadas.
 #' @param threshold Escalar numérico no intervalo fechado `[0, 1]`.
 #'
 #' @return Objeto com a mesma classe estrutural de `.data`, sem as colunas de
-#' alta frequência modal selecionadas.
+#' alta frequência modal selecionadas. Entradas DuckDB retornam um `data.frame`
+#' materializado.
 #' @seealso [sby_select_non_constant()], [sby_select_correlation()]
 #' @export
 sby_select_modal_frequency <- function(.data, ..., threshold = 0.99){
 
   # Validate supported tabular input and threshold before scanning columns
-  sby_internal_validate_tabular_input(.data = .data)
+  .data <- sby_internal_validate_tabular_input(.data = .data)
   threshold <- sby_internal_validate_threshold_scalar(
     threshold = threshold,
     arg_name = "threshold"

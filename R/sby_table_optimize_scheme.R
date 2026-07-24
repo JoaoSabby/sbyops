@@ -14,7 +14,8 @@
 #' com aparência inteira são compactados somente quando permanecem dentro do
 #' intervalo de representação exata de doubles.
 #'
-#' @param .data Data frame, tibble ou data.table cujas colunas serão analisadas.
+#' @param .data Tabela DuckDB, data frame, tibble ou data.table cujas colunas
+#' serão analisadas.
 #'
 #' @return Objeto `arrow::Schema` otimizado.
 #'
@@ -30,14 +31,12 @@
 #' @export
 sby_table_optimize_scheme <- function(.data){
 
+  # Collect lazy DuckDB relations before inspecting their R/Arrow types.
+  .data <- sby_internal_validate_tabular_input(.data = .data)
+
   # Require arrow only when Arrow schema optimization is requested
   if(!requireNamespace("arrow", quietly = TRUE)){
     stop("O pacote 'arrow' é necessário para usar sby_table_optimize_scheme(). Instale com install.packages('arrow').")
-  }
-
-  # Validate the main structure before inferring types
-  if(!is.data.frame(.data)){
-    stop("The object must be a data.frame, tibble, or data.table")
   }
 
   # Check whether all columns belong to supported types

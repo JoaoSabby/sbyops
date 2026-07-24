@@ -35,7 +35,7 @@
 #' Kendall, M. G. (1938). A new measure of rank correlation. *Biometrika*,
 #' 30(1/2), 81--93.
 #'
-#' @param .data Data frame, tibble ou data.table.
+#' @param .data Tabela DuckDB, data frame, tibble ou data.table.
 #' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
 #' perfiladas.
 #' @param max_rows Inteiro positivo ou `Inf`. Entradas maiores são amostradas de
@@ -61,7 +61,7 @@ sby_profile_data_relations <- function(
 ){
   # Resolve and sample the selected table before pair enumeration so the
   # quadratic relation scan remains reproducible and bounded in runtime.
-  sby_internal_validate_tabular_input(.data = .data)
+  .data <- sby_internal_validate_tabular_input(.data = .data)
 
   maxRows <- if(
     is.numeric(max_rows) &&

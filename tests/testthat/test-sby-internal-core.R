@@ -19,6 +19,22 @@ test_that("sby_internal_validate_tabular_input rejeita objetos nao tabulares", {
   expect_error(validate_tabular(NULL), "must be a data.frame")
 })
 
+test_that("sby_internal_validate_tabular_input materializa relacoes DuckDB", {
+  relation <- structure(
+    list(value = data.frame(a = 1:3, b = c(TRUE, FALSE, TRUE))),
+    class = "duckdb_relation"
+  )
+  method_name <- "as.data.frame.duckdb_relation"
+  assign(method_name, function(x, ...) x$value, envir = .GlobalEnv)
+  on.exit(rm(list = method_name, envir = .GlobalEnv), add = TRUE)
+
+  expect_identical(validate_tabular(relation), relation$value)
+  expect_identical(
+    validate_tabular(relation, validate_column_types = TRUE),
+    relation$value
+  )
+})
+
 test_that("sby_internal_validate_tabular_input aceita logical e rejeita colunas fora do contrato", {
   expect_identical(
     validate_tabular(data.frame(a = c(TRUE, FALSE)), validate_column_types = TRUE),

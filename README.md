@@ -69,6 +69,7 @@ a ferramenta:
 
 - `data.frame`;
 - `tibble`;
+- relações/tabelas DuckDB (materializadas automaticamente como `data.frame`);
 - `matrix`, quando a função documenta suporte matricial.
 
 Seleções de colunas usam semântica `tidyselect` quando a função recebe `...`.

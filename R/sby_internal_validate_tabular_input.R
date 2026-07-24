@@ -4,6 +4,10 @@
 #'
 #' @description Validate supported tabular input classes for selectors
 #'
+#' DuckDB relations are materialized as base data frames before validation. This
+#' keeps the downstream native code independent from DuckDB while allowing lazy
+#' DuckDB tables to be passed to every public tabular operation.
+#'
 #' @param .data Candidate tabular object
 #'
 #' @param validate_column_types Whether to validate that the provided object only
@@ -12,9 +16,24 @@
 #' @return The validated input object
 sby_internal_validate_tabular_input <- function(.data, validate_column_types = FALSE){
 
-  # Abort when input is not a data frame, tibble, data.table, or matrix
+  # DuckDB's relational API deliberately does not inherit from data.frame. Use
+  # its as.data.frame method so collection happens through DuckDB itself and no
+  # optional package needs to be attached (or imported) by sbyops.
+  if(inherits(.data, "duckdb_relation")){
+    .data <- tryCatch(
+      as.data.frame(.data),
+      error = function(error){
+        stop(
+          paste0("Unable to materialize the DuckDB table: ", conditionMessage(error)),
+          call. = FALSE
+        )
+      }
+    )
+  }
+
+  # Abort when input is not one of the supported in-memory table structures
   if(!(inherits(.data, "data.frame") || is.matrix(.data))){
-    stop("`.data` must be a data.frame, tibble, data.table, or matrix", call. = FALSE)
+    stop("`.data` must be a data.frame, tibble, data.table, matrix, or DuckDB table", call. = FALSE)
   }
 
   if(isTRUE(validate_column_types)){

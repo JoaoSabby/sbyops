@@ -38,7 +38,7 @@
 #' Maronna, R. A.; Martin, R. D.; Yohai, V. J.; Salibián-Barrera, M. (2019).
 #' *Robust Statistics: Theory and Methods*. Wiley.
 #'
-#' @param .data Data frame, tibble ou data.table.
+#' @param .data Tabela DuckDB, data frame, tibble ou data.table.
 #' @param ... Expressões tidyselect. O padrão seleciona colunas numéricas.
 #' @param alpha Probabilidade de cauda superior usada no corte qui-quadrado.
 #' @param max_fit_rows Tamanho máximo da amostra determinística para ajustar o
@@ -59,7 +59,7 @@ sby_detect_multivariate_outliers <- function(
 ){
   # Select and validate numeric columns before matrix conversion because MCD
   # requires a finite multivariate numeric geometry with non-singular scale.
-  sby_internal_validate_tabular_input(.data = .data)
+  .data <- sby_internal_validate_tabular_input(.data = .data)
 
   alphaValue <- sby_internal_profile_validate_probability(
     value = alpha,
