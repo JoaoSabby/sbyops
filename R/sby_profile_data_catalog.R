@@ -40,7 +40,7 @@
 #' Shannon, C. E. (1948). A mathematical theory of communication. *Bell System
 #' Technical Journal*, 27, 379--423.
 #'
-#' @param .data Data frame, tibble ou data.table.
+#' @param .data Tabela DuckDB, data frame, tibble ou data.table.
 #' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
 #' perfiladas.
 #' @param bitmap_cardinality_ratio Razão máxima de cardinalidade distinta para
@@ -135,7 +135,7 @@ sby_profile_data_catalog <- function(
 ){
   # Validate all scalar controls before any expensive copy to fail fast and keep
   # memory pressure predictable for very large tabular inputs.
-  sby_internal_validate_tabular_input(.data = .data)
+  .data <- sby_internal_validate_tabular_input(.data = .data)
 
   bitmapCardinalityRatio <- sby_internal_profile_validate_probability(
     value = bitmap_cardinality_ratio,
@@ -206,7 +206,7 @@ sby_profile_data_catalog <- function(
 #' dependem da tabela completa. A contagem de duplicatas pode ser desativada para
 #' reduzir custo em bases muito grandes.
 #'
-#' @param .data Data frame, tibble ou data.table.
+#' @param .data Tabela DuckDB, data frame, tibble ou data.table.
 #' @param calculate_duplicate_rows Escalar lógico que indica se linhas
 #' duplicadas exatas devem ser contadas.
 #' @param num_treads Inteiro positivo opcional com limite temporário de threads.
@@ -219,7 +219,7 @@ sby_profile_data_set <- function(
   calculate_duplicate_rows = TRUE,
   num_treads = NULL
 ){
-  sby_internal_validate_tabular_input(.data = .data)
+  .data <- sby_internal_validate_tabular_input(.data = .data)
 
   if(
     !is.logical(calculate_duplicate_rows) ||
@@ -269,7 +269,7 @@ sby_profile_data_set <- function(
 #' ajuda a identificar ausências estruturais, blocos de variáveis faltantes em
 #' conjunto e falhas recorrentes de integração.
 #'
-#' @param .data Data frame, tibble ou data.table.
+#' @param .data Tabela DuckDB, data frame, tibble ou data.table.
 #' @param top_count Inteiro positivo com a quantidade máxima de padrões.
 #' @param num_treads Inteiro positivo opcional com limite temporário de threads.
 #'
@@ -281,7 +281,7 @@ sby_profile_missing_patterns <- function(
   top_count = 20L,
   num_treads = NULL
 ){
-  sby_internal_validate_tabular_input(.data = .data)
+  .data <- sby_internal_validate_tabular_input(.data = .data)
 
   topCount <- sby_internal_profile_validate_positive_integer(
     value = top_count,

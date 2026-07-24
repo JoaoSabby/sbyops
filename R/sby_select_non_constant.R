@@ -13,12 +13,12 @@
 #' contrário, uma implementação R segura é aplicada. Colunas fora da seleção são
 #' preservadas.
 #'
-#' @param .data Data frame, tibble, data.table ou matriz.
+#' @param .data Tabela DuckDB, data frame, tibble, data.table ou matriz.
 #' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
 #' avaliadas.
 #'
 #' @return Objeto com a mesma classe estrutural de `.data`, sem as colunas
-#' constantes selecionadas.
+#' constantes selecionadas. Entradas DuckDB retornam um `data.frame` materializado.
 #'
 #' @seealso [sby_select_correlation()], [sby_select_modal_frequency()]
 #'
@@ -28,7 +28,7 @@
 #' @export
 sby_select_non_constant <- function(.data, ...){
 
-  sby_internal_validate_tabular_input(.data = .data)
+  .data <- sby_internal_validate_tabular_input(.data = .data)
 
   if(collapse::fncol(.data) == 0L || collapse::fnrow(.data) == 0L){
     return(.data)

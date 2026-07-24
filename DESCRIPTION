@@ -40,6 +40,7 @@ Imports:
 LinkingTo:
     Rcpp
 Suggests:
+    duckdb,
     gamlss,
     gamlss.dist,
     RhpcBLASctl

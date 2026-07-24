@@ -18,3 +18,8 @@ The validated input object
 \description{
 Validate supported tabular input classes for selectors
 }
+\details{
+DuckDB relations are materialized as base data frames before validation. This
+keeps the downstream native code independent from DuckDB while allowing lazy
+DuckDB tables to be passed to every public tabular operation.
+}

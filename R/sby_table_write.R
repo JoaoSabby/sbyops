@@ -10,7 +10,7 @@
 #' row group e versão Parquet. O codec de compressão pode ser sobrescrito por
 #' `options(sby_parquet_compression = ...)`.
 #'
-#' @param .data Data frame, tibble ou data.table a ser escrito.
+#' @param .data Tabela DuckDB, data frame, tibble ou data.table a ser escrito.
 #' @param file Caminho completo de saída. A extensão `.parquet` é adicionada
 #' automaticamente quando ausente.
 #'
@@ -27,14 +27,12 @@
 #' @export
 sby_table_write <- function(.data, file){
 
+  # Collect lazy DuckDB relations once for schema inference and Parquet writing.
+  .data <- sby_internal_validate_tabular_input(.data = .data)
+
   # Require arrow only when Parquet writing is requested
   if(!requireNamespace("arrow", quietly = TRUE)){
     stop("O pacote 'arrow' é necessário para usar sby_table_write(). Instale com install.packages('arrow').")
-  }
-
-  # Validate the main structure before creating Arrow objects
-  if(!is.data.frame(.data)){
-    stop("The object must be a data.frame, tibble, or data.table")
   }
 
   # Normalize the output file extension

@@ -11,7 +11,8 @@
 #' escolhida automaticamente entre rotinas de streaming, Fortran e BLAS, de
 #' acordo com os limiares configurados por [sby_config()].
 #'
-#' @param .data Data frame, tibble, data.table ou matriz numericamente compatível.
+#' @param .data Tabela DuckDB, data frame, tibble, data.table ou matriz
+#' numericamente compatível.
 #' @param ... Expressões tidyselect. Quando omitidas, colunas numéricas são
 #' avaliadas.
 #' @param threshold Escalar numérico em `[0, 1]` usado como limiar de remoção.
@@ -23,7 +24,7 @@
 #' @export
 sby_select_correlation <- function(.data, ..., threshold, num_treads = NULL){
 
-  sby_internal_validate_tabular_input(.data = .data)
+  .data <- sby_internal_validate_tabular_input(.data = .data)
   threshold <- sby_internal_validate_correlation_threshold(threshold = threshold)
 
   selected_columns <- sby_internal_eval_select(.data = .data, ..., default = "numeric")

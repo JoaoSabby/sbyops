@@ -12,7 +12,7 @@ sby_detect_multivariate_outliers(
 )
 }
 \arguments{
-\item{.data}{Data frame, tibble ou data.table.}
+\item{.data}{Tabela DuckDB, data frame, tibble ou data.table.}
 \item{...}{Expressões tidyselect. Quando omitidas, colunas numéricas são selecionadas.}
 \item{alpha}{Probabilidade de cauda superior usada no ponto de corte qui-quadrado.}
 \item{max_fit_rows}{Tamanho máximo da amostra determinística usada para ajustar o MCD.}
