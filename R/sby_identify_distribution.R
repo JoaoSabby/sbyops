@@ -9,6 +9,8 @@
 #'
 #' @export
 sby_distribution_candidates <- function(){
+  # Remove invalid observations once at the public boundary to avoid repeated
+  # filtering inside each candidate fit and to keep likelihood inputs identical.
   candidateNames <- c(
     "NO",
     "GU",
@@ -102,9 +104,36 @@ sby_distribution_candidates <- function(){
 #' )
 #'
 #' @description
-#' Fit compatible candidates to a continuous numeric vector and rank them with
-#' likelihood, AIC, AICc, BIC, goodness-of-fit statistics, and an approximate
-#' Bayesian model probability.
+#' Identifica distribuições contínuas candidatas para um vetor numérico por
+#' ajuste de máxima verossimilhança, critérios de informação e diagnósticos
+#' empíricos de aderência.
+#'
+#' @details
+#' Para cada família compatível com o suporte observado, a rotina ajusta um
+#' modelo `gamlss`, calcula \(\ell(\hat\theta)\), AIC, AICc, BIC, pesos de
+#' Akaike e probabilidades posteriores aproximadas via BIC. A aproximação
+#' bayesiana é condicional ao conjunto de modelos, aos ajustes convergentes e
+#' aos pesos `model_prior`; portanto, não deve ser interpretada como prova de
+#' que uma distribuição verdadeira pertence ao catálogo.
+#'
+#' As estatísticas de Kolmogorov--Smirnov, Cramér--von Mises e
+#' Anderson--Darling são reportadas como medidas de ranqueamento, sem valores-p
+#' ingênuos, porque os parâmetros são estimados nos mesmos dados. Amostras muito
+#' longas são reduzidas por amostragem determinística para preservar velocidade,
+#' reprodutibilidade e consumo previsível de memória.
+#'
+#' @references
+#' Akaike, H. (1974). A new look at the statistical model identification.
+#' *IEEE Transactions on Automatic Control*, 19(6), 716--723.
+#'
+#' Schwarz, G. (1978). Estimating the dimension of a model. *The Annals of
+#' Statistics*, 6(2), 461--464.
+#'
+#' Rigby, R. A.; Stasinopoulos, D. M. (2005). Generalized additive models for
+#' location, scale and shape. *Applied Statistics*, 54(3), 507--554.
+#'
+#' Burnham, K. P.; Anderson, D. R. (2002). *Model Selection and Multimodel
+#' Inference*. Springer.
 #'
 #' @details
 #' The posterior column is a BIC or Laplace approximation conditional on the

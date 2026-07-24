@@ -11,9 +11,29 @@
 #' )
 #'
 #' @description
-#' Measure pairwise statistical dependence, redundancy, missingness
-#' association, functional dependencies, and data-only Oracle column-group
-#' signals.
+#' Mede relações bivariadas entre colunas por correlações, associação categórica,
+#' razão de correlação, informação mútua normalizada, nulidade conjunta e
+#' dependências funcionais empíricas.
+#'
+#' @details
+#' Pares numéricos recebem correlações de Pearson, Spearman e Kendall amostral.
+#' Pares categóricos recebem V de Cramér corrigido para viés. Pares mistos usam
+#' \(\eta^2\), a proporção da variabilidade numérica explicada por grupos.
+#' Todos os pares válidos recebem informação mútua após discretização por
+#' quantis quando necessário.
+#'
+#' A cardinalidade de pares cresce como \(p(p-1)/2\). Por isso, recomenda-se
+#' selecionar subconjuntos de colunas em bases largas. Os sinais de redundância,
+#' vazamento e extended statistics Oracle são heurísticos e exigem validação com
+#' semântica de negócio, tempo de referência e workload SQL.
+#'
+#' @references
+#' Cramér, H. (1946). *Mathematical Methods of Statistics*. Princeton.
+#'
+#' Cover, T. M.; Thomas, J. A. (2006). *Elements of Information Theory*. Wiley.
+#'
+#' Kendall, M. G. (1938). A new measure of rank correlation. *Biometrika*,
+#' 30(1/2), 81--93.
 #'
 #' @details
 #' Numeric pairs receive Pearson, Spearman, and sampled Kendall correlations.
@@ -48,6 +68,8 @@ sby_profile_data_relations <- function(
   strong_relation_threshold = 0.8,
   num_treads = NULL
 ){
+  # Resolve and sample the selected table before pair enumeration so the
+  # quadratic relation scan remains reproducible and bounded in runtime.
   sby_internal_validate_tabular_input(.data = .data)
 
   maxRows <- if(
