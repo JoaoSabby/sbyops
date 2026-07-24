@@ -116,3 +116,16 @@ test_that("sby_select_modal_frequency accepts logical columns", {
 
   expect_identical(names(filtered_data), c("keep_logical", "keep_numeric"))
 })
+
+test_that("sby_select_modal_frequency supports data.table input without mutating names", {
+  skip_if_not_installed("data.table")
+
+  dt <- data.table::data.table(a = c(1, 1, 1, 2), b = c(1, 2, 3, 4))
+  original_names <- names(dt)
+
+  out <- sby_select_modal_frequency(dt, threshold = 0.75)
+
+  expect_s3_class(out, "data.table")
+  expect_identical(names(out), "b")
+  expect_identical(names(dt), original_names)
+})

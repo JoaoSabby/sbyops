@@ -7,7 +7,7 @@
 sby_internal_eval_select(.data, ..., default = c("all", "numeric"))
 }
 \arguments{
-\item{.data}{A data frame, tibble, or matrix}
+\item{.data}{A data frame, tibble, data.table, or matrix}
 
 \item{...}{Tidyselect expressions}
 

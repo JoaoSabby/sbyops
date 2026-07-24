@@ -6,7 +6,7 @@
 sby_profile_data_set(.data, calculate_duplicate_rows = TRUE, num_treads = NULL)
 }
 \arguments{
-\item{.data}{Data frame ou tibble.}
+\item{.data}{Data frame, tibble ou data.table.}
 \item{calculate_duplicate_rows}{Escalar lógico que indica se linhas duplicadas exatas devem ser contadas.}
 \item{num_treads}{Inteiro positivo opcional com limite temporário de threads para a chamada.}
 }

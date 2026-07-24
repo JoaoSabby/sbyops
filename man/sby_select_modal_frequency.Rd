@@ -4,7 +4,7 @@
 \title{Selecionar colunas por frequência modal}
 \usage{sby_select_modal_frequency(.data, ..., threshold = 0.99)}
 \arguments{
-\item{.data}{Data frame, tibble ou matriz.}
+\item{.data}{Data frame, tibble, data.table ou matriz.}
 \item{...}{Expressões tidyselect. Quando omitidas, todas as colunas são avaliadas.}
 \item{threshold}{Escalar numérico no intervalo fechado \eqn{[0,1]}.}
 }

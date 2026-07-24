@@ -95,3 +95,15 @@ test_that("sby_internal_restore_selected_data preserva classe e estrutura", {
   outM <- restoreSelected(m[, 1, drop = FALSE], m)
   expect_true(is.matrix(outM))
 })
+
+test_that("sby_internal_restore_selected_data preserves data.table inputs", {
+  skip_if_not_installed("data.table")
+
+  original <- data.table::data.table(a = 1:3, b = 3:1)
+  selected <- original[, "a", with = FALSE]
+
+  restored <- sby_internal_restore_selected_data(selected, original)
+
+  expect_s3_class(restored, "data.table")
+  expect_identical(names(restored), "a")
+})

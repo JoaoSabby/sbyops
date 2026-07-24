@@ -114,3 +114,16 @@ test_that("sby_select_non_constant ignores absent injected character selectors",
   )
   expect_named(out2, c("TARGET", "feature"))
 })
+
+test_that("sby_select_non_constant supports data.table input without mutating names", {
+  skip_if_not_installed("data.table")
+
+  dt <- data.table::data.table(a = c(1, 1, 1), b = c(1, 2, 3))
+  original_names <- names(dt)
+
+  out <- sby_select_non_constant(dt)
+
+  expect_s3_class(out, "data.table")
+  expect_identical(names(out), "b")
+  expect_identical(names(dt), original_names)
+})

@@ -4,7 +4,7 @@
 \title{Remover colunas constantes}
 \usage{sby_select_non_constant(.data, ...)}
 \arguments{
-\item{.data}{Data frame, tibble ou matriz.}
+\item{.data}{Data frame, tibble, data.table ou matriz.}
 \item{...}{Expressões tidyselect. Quando omitidas, todas as colunas são avaliadas.}
 }
 \value{Objeto com a mesma classe estrutural de \code{.data}, sem as colunas constantes selecionadas.}

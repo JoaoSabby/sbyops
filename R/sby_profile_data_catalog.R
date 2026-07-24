@@ -40,7 +40,7 @@
 #' Shannon, C. E. (1948). A mathematical theory of communication. *Bell System
 #' Technical Journal*, 27, 379--423.
 #'
-#' @param .data Data frame ou tibble.
+#' @param .data Data frame, tibble ou data.table.
 #' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
 #' perfiladas.
 #' @param bitmap_cardinality_ratio Razão máxima de cardinalidade distinta para
@@ -52,7 +52,66 @@
 #' estimar o medcouple.
 #' @param num_treads Inteiro positivo opcional com limite temporário de threads.
 #'
-#' @return Tibble com uma linha por coluna selecionada.
+#' @return Tibble com uma linha por coluna selecionada. O catálogo pode incluir
+#' os seguintes grupos de cálculos e valores gerados, conforme o tipo da coluna:
+#'
+#' - **Metadados e estrutura da coluna**: `NOME_COLUNA`, `POSICAO_COLUNA`,
+#'   `CLASSES_R`, `TIPO_BASE_R`, `MODO_ARMAZENAMENTO_R`, `ATRIBUTOS_R`,
+#'   `ROTULO`, `UNIDADE`, `BYTES_OBJETO_R`, `BYTES_R_POR_REGISTRO`,
+#'   `QTD_CARACTERES_NOME_COLUNA`, `QTD_BYTES_NOME_COLUNA`,
+#'   `FLAG_COLISAO_NOME_MAIUSCULO`, `QTD_REGISTROS`, flags de tipo
+#'   (`FLAG_NUMERICA`, `FLAG_TEXTO`, `FLAG_FATOR`, `FLAG_LOGICA`,
+#'   `FLAG_DATA`, `FLAG_DATETIME`, `FLAG_INTEGER64`,
+#'   `FLAG_ESTATISTICA_INTEGER64_APROXIMADA`, `FLAG_LISTA`) e flags
+#'   estruturais (`FLAG_TODOS_NULOS`, `FLAG_CONSTANTE`, `FLAG_BINARIA`).
+#' - **Nulidade e preenchimento**: `QTD_PREENCHIDOS`, `QTD_NULOS`, `QTD_NA`,
+#'   `QTD_NAN`, `QTD_INFINITO_POSITIVO`, `QTD_INFINITO_NEGATIVO`,
+#'   `PERC_PREENCHIDOS`, `PERC_NULOS`, `PERC_NA`, `PERC_NAN`,
+#'   `PERC_INFINITO`, `MODELO_BAYES_NULIDADE`,
+#'   `PERC_NULOS_BAYES_POSTERIOR`, `PERC_NULOS_BAYES_IC95_MIN` e
+#'   `PERC_NULOS_BAYES_IC95_MAX`.
+#' - **Cardinalidade, frequência e concentração**: `QTD_DISTINTOS`,
+#'   `PERC_DISTINTOS_TOTAL`, `PERC_DISTINTOS_VALIDOS`,
+#'   `QTD_DUPLICADOS_VALIDOS`, `MODA`, `QTD_MODA`, `PERC_MODA_VALIDOS`,
+#'   `QTD_SEGUNDA_FREQUENCIA`, `RAZAO_FREQUENCIA_TOP1_TOP2`,
+#'   `PERC_TOP5_VALIDOS`, `PERC_TOP10_VALIDOS`, `ENTROPIA_SHANNON_BITS`,
+#'   `ENTROPIA_NORMALIZADA`, `CARDINALIDADE_EFETIVA`, `INDICE_HHI` e
+#'   `IMPUREZA_GINI`.
+#' - **Estatística numérica, Bayes e outliers**: `QTD_VALIDOS_ESTATISTICA`,
+#'   contagens e percentuais de zeros, positivos e negativos, `SOMA`, `MINIMO`,
+#'   `MAXIMO`, `AMPLITUDE`, `MEDIA`, `ERRO_PADRAO_MEDIA`, `MEDIANA`,
+#'   `VARIANCIA`, `DESVIO_PADRAO`, `COEFICIENTE_VARIACAO`, `MAD`,
+#'   `ASSIMETRIA_AJUSTADA`, `CURTOSE_EXCESSO_AJUSTADA`,
+#'   `MODELO_BAYES_NUMERICO`, intervalos bayesianos da média e predição,
+#'   `PROB_BAYES_MEDIA_MAIOR_ZERO`, `FLAG_BAYES_NORMAL_JEFFREYS_APLICAVEL`,
+#'   quantis `P000` a `P100`, `AMPLITUDE_INTERQUARTIL`,
+#'   `FLAG_INTEIRO_EMPIRICO`, `DIGITOS_INTEIROS_MAX`, flags de monotonicidade,
+#'   limites e contagens de outliers por Tukey, Tukey extremo, z-score,
+#'   z-score robusto e boxplot ajustado, `MEDCOUPLE`, `QTD_AMOSTRA_ROBUSTA`
+#'   e `FLAG_CONTINUA`.
+#' - **Texto e fatores**: comprimentos em caracteres e bytes, `QTD_VAZIOS`,
+#'   `PERC_VAZIOS_VALIDOS`, contagens de espaços, caracteres de controle,
+#'   quebras de linha e não ASCII, cardinalidade normalizada, colisões de
+#'   normalização, percentuais de padrões textuais (inteiro, decimal, lógico,
+#'   data ISO, datetime ISO, UUID, e-mail, URL e JSON), níveis de fator, níveis
+#'   não usados, tamanhos máximos dos níveis e `FLAG_FATOR_ORDENADO`.
+#' - **Datas e tempos**: `DATA_MINIMA`, `DATA_MAXIMA`,
+#'   `AMPLITUDE_DATA_DIAS`, `QTD_ANOS_DISTINTOS`, `QTD_MESES_DISTINTOS`,
+#'   `QTD_DIAS_DISTINTOS`, `FUSO_HORARIO`, flags de monotonicidade temporal e
+#'   `QTD_SEGUNDOS_FRACIONARIOS`.
+#' - **Oracle e armazenamento físico**: `SUGESTAO_TIPO_ORACLE`,
+#'   `TIPO_ORACLE_ALTERNATIVO`, `ALERTA_TIPO_ORACLE`,
+#'   `GRAU_CARDINALIDADE_ORACLE`, `FLAG_CHAVE_CANDIDATA`,
+#'   `FLAG_BAIXA_CARDINALIDADE`, `FLAG_CANDIDATO_BITMAP_POR_DADOS`,
+#'   `FLAG_CANDIDATO_BTREE_SELETIVO_POR_DADOS`, `SUGESTAO_INDICE_ORACLE`,
+#'   `FLAG_DISTRIBUICAO_ASSIMETRICA`, `FLAG_CANDIDATO_HISTOGRAMA_POR_DADOS`,
+#'   `SUGESTAO_HISTOGRAMA_ORACLE`, `FLAG_CANDIDATO_PARTICAO_RANGE_INTERVAL`,
+#'   `FLAG_CANDIDATO_COMPRESSAO_POR_REPETICAO`, flags de compatibilidade de
+#'   nomes Oracle e `METADADOS_ORACLE_A_COLETAR`.
+#' - **Prontidão para modelagem**: `FLAG_QUASE_SEM_VARIANCIA`,
+#'   `FLAG_POSSIVEL_IDENTIFICADOR_MODELO`, `FLAG_ALTA_NULIDADE_MODELO`,
+#'   `FLAG_CATEGORIA_ALTA_CARDINALIDADE_MODELO`,
+#'   `FLAG_REVISAR_ANTES_MODELAGEM` e `MOTIVOS_REVISAO_MODELAGEM`.
 #'
 #' @importFrom collapse fmean fmedian fquantile fsd fsum
 #' @importFrom data.table as.data.table getDTthreads rbindlist
@@ -110,7 +169,7 @@ sby_profile_data_catalog <- function(
     return(tibble())
   }
 
-  selectedData <- .data[, unname(selectedColumns), drop = FALSE]
+  selectedData <- sby_internal_subset_columns(.data, unname(selectedColumns))
 
   sby_internal_with_thread_context(
     expr = sby_internal_profile_with_data_table_threads(
@@ -147,7 +206,7 @@ sby_profile_data_catalog <- function(
 #' dependem da tabela completa. A contagem de duplicatas pode ser desativada para
 #' reduzir custo em bases muito grandes.
 #'
-#' @param .data Data frame ou tibble.
+#' @param .data Data frame, tibble ou data.table.
 #' @param calculate_duplicate_rows Escalar lógico que indica se linhas
 #' duplicadas exatas devem ser contadas.
 #' @param num_treads Inteiro positivo opcional com limite temporário de threads.
@@ -210,7 +269,7 @@ sby_profile_data_set <- function(
 #' ajuda a identificar ausências estruturais, blocos de variáveis faltantes em
 #' conjunto e falhas recorrentes de integração.
 #'
-#' @param .data Data frame ou tibble.
+#' @param .data Data frame, tibble ou data.table.
 #' @param top_count Inteiro positivo com a quantidade máxima de padrões.
 #' @param num_treads Inteiro positivo opcional com limite temporário de threads.
 #'

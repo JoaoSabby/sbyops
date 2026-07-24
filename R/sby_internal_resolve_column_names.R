@@ -9,7 +9,7 @@
 #' @section Internal contract:
 #' This function expects a tabular object with a defined column count
 #'
-#' @param .data A data frame, tibble, or matrix
+#' @param .data A data frame, tibble, data.table, or matrix
 #'
 #' @return A character vector with normalized unique column names
 #'

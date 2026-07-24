@@ -1,7 +1,7 @@
 #' @title Otimizar schema Arrow para escrita Parquet
 #'
 #' @description
-#' Inspeciona colunas de um data frame ou tibble e retorna um schema Arrow
+#' Inspeciona colunas de um data frame, tibble ou data.table e retorna um schema Arrow
 #' compacto para escrita analítica em Parquet.
 #'
 #' @details
@@ -14,7 +14,7 @@
 #' com aparência inteira são compactados somente quando permanecem dentro do
 #' intervalo de representação exata de doubles.
 #'
-#' @param .data Data frame ou tibble cujas colunas serão analisadas.
+#' @param .data Data frame, tibble ou data.table cujas colunas serão analisadas.
 #'
 #' @return Objeto `arrow::Schema` otimizado.
 #'
@@ -37,7 +37,7 @@ sby_table_optimize_scheme <- function(.data){
 
   # Validate the main structure before inferring types
   if(!is.data.frame(.data)){
-    stop("The object must be a data.frame or tibble")
+    stop("The object must be a data.frame, tibble, or data.table")
   }
 
   # Check whether all columns belong to supported types

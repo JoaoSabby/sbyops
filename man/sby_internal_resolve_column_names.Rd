@@ -7,7 +7,7 @@
 sby_internal_resolve_column_names(.data)
 }
 \arguments{
-\item{.data}{A data frame, tibble, or matrix}
+\item{.data}{A data frame, tibble, data.table, or matrix}
 }
 \value{
 A character vector with normalized unique column names

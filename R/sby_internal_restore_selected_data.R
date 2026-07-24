@@ -8,6 +8,7 @@
 #'
 #' @details
 #' Matrix inputs are restored as matrices with row names when present.
+#' Data.table inputs are restored as data.tables when the namespace is present.
 #' Tibble inputs are restored as tibbles when the namespace is present.
 #' All other inputs return a base data frame
 #'
@@ -40,6 +41,18 @@ sby_internal_restore_selected_data <- function(selected_data, original){
 
     # Return restored matrix with preserved row-name metadata
     return(restored_matrix)
+  }
+
+
+  # Rebuild data.table outputs before tibble restoration because data.tables also
+  # inherit from data.frame and can optionally inherit tibble classes.
+  if(inherits(original, "data.table") && requireNamespace("data.table", quietly = TRUE)){
+
+    # Materialize data.table result in a fresh object to avoid modifying callers by reference
+    restored_data_table <- data.table::as.data.table(selected_data)
+
+    # Return restored data.table compatible with original class
+    return(restored_data_table)
   }
 
   # Rebuild tibble outputs only when tibble namespace is available

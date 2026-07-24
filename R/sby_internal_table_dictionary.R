@@ -12,7 +12,7 @@
 #' For numeric, logical, and date columns, dictionary encoding is disabled by
 #' default to preserve direct primitive representation.
 #'
-#' @param .data Object of class \code{data.frame} or \code{tibble}.
+#' @param .data Object of class \code{data.frame}, \code{tibble}, or \code{data.table}.
 #'
 #' @return Named logical vector with one decision per column.
 #'

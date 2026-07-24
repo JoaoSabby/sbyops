@@ -7,7 +7,7 @@
 sby_internal_table_dictionary(.data)
 }
 \arguments{
-\item{.data}{Object of class \code{data.frame} or \code{tibble}.}
+\item{.data}{Object of class \code{data.frame}, \code{tibble}, or \code{data.table}.}
 }
 \value{
 Named logical vector with one decision per column.

@@ -11,7 +11,7 @@
 #' escolhida automaticamente entre rotinas de streaming, Fortran e BLAS, de
 #' acordo com os limiares configurados por [sby_config()].
 #'
-#' @param .data Data frame, tibble ou matriz numericamente compatível.
+#' @param .data Data frame, tibble, data.table ou matriz numericamente compatível.
 #' @param ... Expressões tidyselect. Quando omitidas, colunas numéricas são
 #' avaliadas.
 #' @param threshold Escalar numérico em `[0, 1]` usado como limiar de remoção.
@@ -28,7 +28,7 @@ sby_select_correlation <- function(.data, ..., threshold, num_treads = NULL){
 
   selected_columns <- sby_internal_eval_select(.data = .data, ..., default = "numeric")
 
-  selected_data <- .data[, unname(selected_columns), drop = FALSE]
+  selected_data <- sby_internal_subset_columns(.data, unname(selected_columns))
   sby_internal_validate_tabular_input(
     .data = selected_data,
     validate_column_types = TRUE
@@ -69,5 +69,8 @@ sby_select_correlation <- function(.data, ..., threshold, num_treads = NULL){
     )
   }
 
-  .data[, setdiff(colnames(.data), removed_columns), drop = FALSE]
+  sby_internal_restore_selected_data(
+    selected_data = sby_internal_subset_columns(.data, setdiff(colnames(.data), removed_columns)),
+    original = .data
+  )
 }

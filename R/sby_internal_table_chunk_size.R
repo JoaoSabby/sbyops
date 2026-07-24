@@ -12,7 +12,7 @@
 #' The default target is 512 MiB per row group. It can be changed with
 #' \code{options(sby_parquet_row_group_bytes = ...)}.
 #'
-#' @param .data Object of class \code{data.frame} or \code{tibble}.
+#' @param .data Object of class \code{data.frame}, \code{tibble}, or \code{data.table}.
 #'
 #' @return Integer with the number of rows per row group.
 #'

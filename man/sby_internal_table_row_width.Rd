@@ -7,7 +7,7 @@
 sby_internal_table_row_width(.data)
 }
 \arguments{
-\item{.data}{Object of class \code{data.frame} or \code{tibble}.}
+\item{.data}{Object of class \code{data.frame}, \code{tibble}, or \code{data.table}.}
 }
 \value{
 Numeric value with the approximate average row width in bytes.

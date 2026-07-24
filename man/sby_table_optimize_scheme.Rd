@@ -3,7 +3,7 @@
 \alias{sby_table_optimize_scheme}
 \title{Otimizar schema Arrow para escrita Parquet}
 \usage{sby_table_optimize_scheme(.data)}
-\arguments{\item{.data}{Data frame ou tibble cujas colunas serão analisadas.}}
+\arguments{\item{.data}{Data frame, tibble ou data.table cujas colunas serão analisadas.}}
 \value{Objeto \code{arrow::Schema} otimizado para escrita Parquet.}
 \description{Inspeciona colunas de uma tabela R e retorna um schema Arrow compacto para escrita analítica em Parquet.}
 \details{A função mapeia tipos lógicos, caracteres, fatores, datas, inteiros e números reais para representações Arrow seguras e compactas. Colunas numéricas são avaliadas por rotinas C++ para reduzir passagens sobre os dados e evitar coerções incorretas de infinitos ou inteiros acima do limite de representação exata.}
