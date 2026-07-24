@@ -1,4 +1,4 @@
-#' @title Profile Pairwise Data Relations
+#' @title Perfilar relações bivariadas entre colunas
 #'
 #' @usage
 #' sby_profile_data_relations(
@@ -35,27 +35,18 @@
 #' Kendall, M. G. (1938). A new measure of rank correlation. *Biometrika*,
 #' 30(1/2), 81--93.
 #'
-#' @details
-#' Numeric pairs receive Pearson, Spearman, and sampled Kendall correlations.
-#' Categorical pairs receive corrected Cramer's V. Mixed pairs receive the
-#' correlation ratio. Every supported pair receives normalized mutual
-#' information after numeric discretization.
+#' @param .data Data frame ou tibble.
+#' @param ... Expressões tidyselect. Quando omitidas, todas as colunas são
+#' perfiladas.
+#' @param max_rows Inteiro positivo ou `Inf`. Entradas maiores são amostradas de
+#' forma determinística.
+#' @param numeric_bins Número de intervalos por quantis usado na informação
+#' mútua.
+#' @param strong_relation_threshold Limiar em `(0, 1)` para triagem de relação
+#' forte.
+#' @param num_treads Inteiro positivo opcional com limite temporário de threads.
 #'
-#' Strong relations and functional dependencies can indicate redundant
-#' predictors or leakage. Oracle extended-statistics fields are screening
-#' signals only. SQL workload and optimizer column usage remain required.
-#' The number of pairs grows quadratically, so wide inputs should use `...`
-#' to select a relevant subset or branch the work in `targets`.
-#'
-#' @param .data A data frame or tibble.
-#' @param ... Tidyselect expressions. When omitted, all columns are profiled.
-#' @param max_rows Positive integer or `Inf`. Larger inputs are sampled
-#' deterministically.
-#' @param numeric_bins Number of quantile bins used for mutual information.
-#' @param strong_relation_threshold Threshold in `(0, 1)` for screening.
-#' @param num_treads Optional positive integer thread cap for this call.
-#'
-#' @return A tibble with one row per column pair.
+#' @return Tibble com uma linha por par de colunas.
 #'
 #' @importFrom stats cor
 #' @importFrom utils combn

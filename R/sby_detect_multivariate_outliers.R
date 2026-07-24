@@ -1,4 +1,4 @@
-#' @title Detect Multivariate Outliers with Robust MCD
+#' @title Detectar outliers multivariados com MCD robusto
 #'
 #' @usage
 #' sby_detect_multivariate_outliers(
@@ -38,18 +38,14 @@
 #' Maronna, R. A.; Martin, R. D.; Yohai, V. J.; Salibián-Barrera, M. (2019).
 #' *Robust Statistics: Theory and Methods*. Wiley.
 #'
-#' @details
-#' The estimator must be fitted only on training data when its distances or
-#' flags are used by a predictive model. The function uses the sbyops BLAS
-#' thread context, allowing the active oneMKL backend to respect `num_treads`.
+#' @param .data Data frame ou tibble.
+#' @param ... Expressões tidyselect. O padrão seleciona colunas numéricas.
+#' @param alpha Probabilidade de cauda superior usada no corte qui-quadrado.
+#' @param max_fit_rows Tamanho máximo da amostra determinística para ajustar o
+#' MCD.
+#' @param num_treads Inteiro positivo opcional com limite temporário de threads.
 #'
-#' @param .data A data frame or tibble.
-#' @param ... Tidyselect expressions. The default selects numeric columns.
-#' @param alpha Upper-tail probability used for the chi-squared cutoff.
-#' @param max_fit_rows Maximum deterministic sample size used to fit MCD.
-#' @param num_treads Optional positive integer thread cap for this call.
-#'
-#' @return A tibble with one row per input row.
+#' @return Tibble com uma linha por observação da entrada.
 #'
 #' @importFrom robustbase covMcd
 #' @importFrom stats complete.cases mahalanobis qchisq sd

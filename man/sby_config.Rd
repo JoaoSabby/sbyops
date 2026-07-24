@@ -1,7 +1,7 @@
 % Generated manually for the development snapshot.
 \name{sby_config}
 \alias{sby_config}
-\title{Configure sbyops execution thresholds}
+\title{Configurar limiares e threads do sbyops}
 \usage{
 sby_config(
   sby_config_start_fortran = 10000L,
@@ -10,24 +10,11 @@ sby_config(
 )
 }
 \arguments{
-\item{sby_config_start_fortran}{Integer threshold where automatic execution switches from streaming to Fortran backend.}
-\item{sby_config_start_blas}{Integer threshold where BLAS execution is enabled.}
-\item{sby_config_max_threads}{Integer positive scalar thread cap used by runtime thread contexts.}
+\item{sby_config_start_fortran}{Inteiro positivo com o limiar de ativação do backend Fortran.}
+\item{sby_config_start_blas}{Inteiro positivo com o limiar de ativação do backend BLAS.}
+\item{sby_config_max_threads}{Inteiro positivo com o limite global padrão de threads.}
 }
-\value{
-A named list with validated configuration values.
-}
-\description{
-Configure backend thresholds and thread limit for automatic execution planning.
-}
-\details{
-This function stores runtime options consumed by internal dispatch logic. \code{sby_config_max_threads} is the central thread cap used by runtime thread contexts.
-}
-\examples{
-# Apply default configuration values explicitly
-sby_config(
-  sby_config_start_fortran = 10000L,
-  sby_config_start_blas = 100000L,
-  sby_config_max_threads = 2L
-)
-}
+\value{Lista nomeada com os valores validados e gravados em \code{options()}.}
+\description{Define opções globais de planejamento de execução usadas pelas ferramentas do pacote para escolher backends e limitar paralelismo.}
+\details{A configuração é lida no momento de cada chamada. Funções que recebem \code{num_treads} podem sobrescrever temporariamente \code{sby_config_max_threads} sem alterar a configuração armazenada.}
+\examples{sby_config(sby_config_max_threads = 2L)}

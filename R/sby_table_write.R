@@ -1,46 +1,29 @@
-#' @title Write a Table to Parquet with an Optimized Arrow Schema
+#' @title Escrever tabela em Parquet com schema Arrow otimizado
 #'
 #' @description
-#' Receives a \code{data.frame} or \code{tibble}, applies automatic Arrow schema
-#' optimization, and writes the result to a Parquet file.
+#' Recebe um data frame ou tibble, aplica otimização automática de schema Arrow e
+#' grava o resultado em arquivo Parquet.
 #'
 #' @details
-#' The function receives only \code{.data} and \code{file}. All writing
-#' parameters are defined internally with an emphasis on fast analytical reading
-#' and practical use.
+#' A ferramenta centraliza parâmetros de escrita analítica: schema otimizado,
+#' compressão, dictionary encoding por coluna, estatísticas, tamanho de página,
+#' row group e versão Parquet. O codec de compressão pode ser sobrescrito por
+#' `options(sby_parquet_compression = ...)`.
 #'
-#' The function applies an optimized Arrow schema, defines fast compression,
-#' column-level dictionary encoding, statistics, data page size, row group size,
-#' and Parquet version.
+#' @param .data Data frame ou tibble a ser escrito.
+#' @param file Caminho completo de saída. A extensão `.parquet` é adicionada
+#' automaticamente quando ausente.
 #'
-#' The Parquet version is obtained from
-#' \code{getOption("sby_parquet_version", "2.6")}. The compression codec can be
-#' overridden with \code{options(sby_parquet_compression = ...)}.
-#'
-#' @param .data Object of class \code{data.frame} or \code{tibble} to be
-#' written.
-#' @param file Complete output file path. The \code{.parquet} extension is added
-#' automatically when absent.
-#'
-#' @return
-#' Invisibly returns \code{NULL}.
+#' @return Retorna `NULL` invisivelmente.
 #'
 #' @usage sby_table_write(.data, file)
 #'
 #' @examples
 #' \dontrun{
-#' sby_table_write(
-#'   .data = data,
-#'   file = "/data/modeling/training_base"
-#' )
-#'
-#' sby_table_write(
-#'   .data = data,
-#'   file = "/data/modeling/training_base.parquet"
-#' )
+#' sby_table_write(.data = dados, file = "dados.parquet")
 #' }
 #'
-#'
+#' @seealso [sby_table_optimize_scheme()]
 #' @export
 sby_table_write <- function(.data, file){
 

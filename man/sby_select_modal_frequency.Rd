@@ -1,21 +1,14 @@
 % Generated manually for the development snapshot.
 \name{sby_select_modal_frequency}
 \alias{sby_select_modal_frequency}
-\title{Select columns by modal frequency}
-\usage{
-sby_select_modal_frequency(.data, ..., threshold = 0.99)
-}
+\title{Selecionar colunas por frequência modal}
+\usage{sby_select_modal_frequency(.data, ..., threshold = 0.99)}
 \arguments{
-\item{.data}{A data frame-like object.}
-\item{...}{Tidyselect expressions for data-frame-like inputs. When omitted, all columns are considered.}
-\item{threshold}{Numeric scalar threshold argument accepted by the public API.}
+\item{.data}{Data frame, tibble ou matriz.}
+\item{...}{Expressões tidyselect. Quando omitidas, todas as colunas são avaliadas.}
+\item{threshold}{Escalar numérico no intervalo fechado \eqn{[0,1]}.}
 }
-\value{
-\code{.data} with columns retained according to the current modal-frequency implementation.
-}
-\description{
-Filters selected columns with modal-frequency logic implemented directly in \R{}. Columns outside the tidyselect selection are retained without being evaluated by the modal-frequency algorithm.
-}
-\details{
-This development snapshot keeps the current \code{sby_select_modal_frequency()} implementation as the source of truth and removes the previous native modal-frequency backend from the package.
-}
+\value{Objeto com a mesma classe estrutural de \code{.data}, sem as colunas selecionadas de alta frequência modal.}
+\description{Remove colunas cuja categoria ou valor mais frequente representa proporção maior ou igual ao limiar informado.}
+\details{A ferramenta identifica variáveis praticamente constantes por meio da frequência do valor modal. Colunas fora da seleção são preservadas.}
+\seealso{\code{\link{sby_select_non_constant}}, \code{\link{sby_select_correlation}}}

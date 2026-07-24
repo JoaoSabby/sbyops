@@ -1,4 +1,4 @@
-#' @title Configure sbyops Execution Thresholds
+#' @title Configurar limiares e threads do sbyops
 #' @name sby_config
 #'
 #' @usage
@@ -9,33 +9,27 @@
 #' )
 #'
 #' @description
-#' Configure backend thresholds and thread limit for automatic execution planning
+#' Define opções globais de planejamento de execução usadas pelas ferramentas do
+#' pacote para escolher backends e limitar paralelismo.
 #'
 #' @details
-#' This function stores runtime options consumed by internal dispatch logic.
-#' `sby_config_max_threads` is the central thread cap used by runtime thread contexts.
+#' A configuração é armazenada em `options()` e lida no momento de cada chamada.
+#' Os limiares `sby_config_start_fortran` e `sby_config_start_blas` controlam a
+#' troca automática de estratégias em rotinas que possuem múltiplos backends. O
+#' valor `sby_config_max_threads` representa o limite padrão de threads para
+#' funções que executam um contexto temporário de OpenMP, BLAS ou `data.table`.
 #'
-#' Default values are:
-#' - `sby_config_start_fortran = 10000L`
-#' - `sby_config_start_blas = 100000L`
-#' - `sby_config_max_threads = 2L`
+#' @param sby_config_start_fortran Inteiro positivo com o limiar de ativação do
+#' backend Fortran em estratégias automáticas.
+#' @param sby_config_start_blas Inteiro positivo com o limiar de ativação do
+#' backend BLAS em estratégias automáticas.
+#' @param sby_config_max_threads Inteiro positivo com o limite global padrão de
+#' threads.
 #'
-#' @param sby_config_start_fortran Integer threshold where automatic
-#' execution switches from streaming to Fortran backend
-#'
-#' @param sby_config_start_blas Integer threshold where BLAS execution is enabled
-#'
-#' @param sby_config_max_threads Integer positive scalar thread cap used by runtime thread contexts
-#'
-#' @return A named list with validated configuration values
+#' @return Lista nomeada com os valores de configuração validados e gravados.
 #'
 #' @examples
-#' # Apply default configuration values explicitly
-#' sby_config(
-#'   sby_config_start_fortran = 10000L,
-#'   sby_config_start_blas = 100000L,
-#'   sby_config_max_threads = 2L
-#' )
+#' sby_config(sby_config_max_threads = 2L)
 #' @export
 sby_config <- function(sby_config_start_fortran = 10000L,
                        sby_config_start_blas = 100000L,

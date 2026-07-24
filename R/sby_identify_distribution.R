@@ -1,16 +1,22 @@
-#' @title List Candidate Continuous Distributions
+#' @title Listar distribuições contínuas candidatas
 #'
 #' @description
-#' Return the curated set of 50 GAMLSS candidate distributions used by
-#' `sby_identify_distribution()`.
+#' Retorna o catálogo curado de distribuições contínuas candidatas usado por
+#' `sby_identify_distribution()`, incluindo domínio de suporte e indicação de
+#' famílias mistas.
 #'
-#' @return A tibble with distribution name, support domain, and mixed-family
-#' indicator.
+#' @details
+#' O catálogo organiza famílias GAMLSS por suporte: real, positivo e intervalos
+#' unitários com ou sem massa nos limites. A tabela é deliberadamente explícita
+#' para permitir auditoria estatística do conjunto de modelos avaliado.
+#'
+#' @return Um tibble com nome da distribuição, domínio e indicador de família
+#' mista.
 #'
 #' @export
 sby_distribution_candidates <- function(){
-  # Remove invalid observations once at the public boundary to avoid repeated
-  # filtering inside each candidate fit and to keep likelihood inputs identical.
+  # Keep candidate metadata as plain vectors to avoid runtime dependency on
+  # external GAMLSS objects before the fitting function explicitly needs them.
   candidateNames <- c(
     "NO",
     "GU",
@@ -91,7 +97,7 @@ sby_distribution_candidates <- function(){
   )
 }
 
-#' @title Identify the Best Supported Distribution
+#' @title Identificar melhor distribuição suportada
 #'
 #' @usage
 #' sby_identify_distribution(
@@ -135,29 +141,20 @@ sby_distribution_candidates <- function(){
 #' Burnham, K. P.; Anderson, D. R. (2002). *Model Selection and Multimodel
 #' Inference*. Springer.
 #'
-#' @details
-#' The posterior column is a BIC or Laplace approximation conditional on the
-#' candidate set, successful fits, and supplied model priors. It is not an exact
-#' posterior probability that a distribution is true. Exact Bayes factors
-#' require explicit parameter priors and posterior simulation for every model.
+#' Os pacotes GAMLSS são dependências opcionais em tempo de execução. A
+#' função gera erro claro quando eles não estão instalados.
 #'
-#' KS, Cramer-von Mises, and Anderson-Darling values are returned as ranking
-#' diagnostics without naive p-values because parameters are estimated from the
-#' same observations. Sampling is deterministic and recorded in the result.
+#' @param x Vetor numérico finito após remoção de ausências e infinitos.
+#' @param candidates Tabela candidata retornada por
+#' `sby_distribution_candidates()` ou estrutura compatível.
+#' @param max_sample_size Inteiro positivo ou `Inf`. Vetores maiores são
+#' amostrados de forma determinística.
+#' @param tail_probability Probabilidade usada para sinalizar outliers de cauda.
+#' @param model_prior Vetor numérico nomeado opcional com pesos prévios
+#' positivos para modelos.
+#' @param num_treads Inteiro positivo opcional com limite temporário de threads.
 #'
-#' GAMLSS packages are optional runtime dependencies. The function generates a
-#' clear error when they are unavailable.
-#'
-#' @param x Numeric vector.
-#' @param candidates Candidate table returned by
-#' `sby_distribution_candidates()` or a compatible table.
-#' @param max_sample_size Positive integer or `Inf`. Larger vectors are sampled
-#' deterministically.
-#' @param tail_probability Probability used to flag fitted tail outliers.
-#' @param model_prior Optional positive named vector of prior model weights.
-#' @param num_treads Optional positive integer thread cap for this call.
-#'
-#' @return A tibble with one row per candidate.
+#' @return Tibble com uma linha por candidata avaliada.
 #'
 #' @export
 sby_identify_distribution <- function(
