@@ -1,7 +1,7 @@
 Package: sbyops
 Type: Package
 Title: Core Computational Engine for the Sabby Ecosystem
-Version: 0.5.7
+Version: 0.6.1
 Authors@R: person("Joao B. G.", "de Brito", role = c("aut", "cre"),
     email = "joaobatista.goncalvesdebrito@ugent.be")
 Description: Serves as the foundational high-performance computing backbone 
