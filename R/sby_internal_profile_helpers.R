@@ -2,6 +2,8 @@ sby_internal_profile_with_data_table_threads <- function(
   expr,
   maxThreads
 ){
+  # Preserve data.table global state around the profilers because thread
+  # settings are process-wide and must not leak into user code after return.
   previousThreads <- getDTthreads()
   on.exit(
     setDTthreads(threads = previousThreads),
