@@ -27,3 +27,13 @@ test_that("native .Call symbols use internal prefix and are registered consisten
 
   expect_true(grepl("R_useDynamicSymbols(dll, FALSE)", init_code, fixed = TRUE))
 })
+
+test_that("registered native symbols do not overwrite R functions", {
+  namespace_code <- sby_internal_read_package_file("NAMESPACE")
+
+  expect_true(grepl(
+    'useDynLib(sbyops, .registration = TRUE, .fixes = "C_")',
+    namespace_code,
+    fixed = TRUE
+  ))
+})

@@ -1,4 +1,4 @@
-useDynLib(sbyops, .registration = TRUE)
+useDynLib(sbyops, .registration = TRUE, .fixes = "C_")
 importFrom(cli,cli_alert_info)
 importFrom(collapse,fncol)
 importFrom(collapse,fnrow)
