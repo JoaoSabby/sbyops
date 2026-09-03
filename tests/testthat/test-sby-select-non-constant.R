@@ -75,6 +75,27 @@ test_that("sby_select_non_constant handles NA and NaN as constant when all are m
   expect_true("varying" %in% names(out))
 })
 
+
+test_that("sby_select_non_constant supports injected character variables with negative tidyselect", {
+  df <- data.frame(
+    TARGET = c(0L, 1L, 0L, 1L),
+    xyz = c(10L, 11L, 12L, 13L),
+    feature = c(2L, 3L, 4L, 5L),
+    DATA_REFERENCIA_TARGET = c("2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04")
+  )
+  variaveis <- "xyz"
+  columnsKeyContext <- c("TARGET", "DATA_REFERENCIA_TARGET")
+
+  out <- sby_select_non_constant(
+    df,
+    -TARGET,
+    -!!variaveis,
+    -!!columnsKeyContext
+  )
+
+  expect_named(out, c("TARGET", "xyz", "feature", "DATA_REFERENCIA_TARGET"))
+})
+
 test_that("sby_select_non_constant accepts logical columns", {
   df <- data.frame(
     constant_true = c(TRUE, TRUE, TRUE, TRUE),
