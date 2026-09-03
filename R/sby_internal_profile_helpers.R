@@ -271,6 +271,52 @@ sby_internal_profile_frequency <- function(values){
   frequencyResult
 }
 
+sby_internal_profile_failed_column <- function(
+  values,
+  columnName,
+  columnPosition,
+  rowCount,
+  uppercaseCollision,
+  errorCondition
+){
+  valueClass <- class(values)
+  attributeNames <- names(attributes(values))
+
+  list(
+    NOME_COLUNA = columnName,
+    POSICAO_COLUNA = as.numeric(columnPosition),
+    CLASSES_R = if(length(valueClass) > 0L){
+      str_c(valueClass, collapse = "; ")
+    } else {
+      NA_character_
+    },
+    TIPO_BASE_R = typeof(values),
+    MODO_ARMAZENAMENTO_R = storage.mode(values),
+    ATRIBUTOS_R = if(length(attributeNames) > 0L){
+      str_c(attributeNames, collapse = "; ")
+    } else {
+      NA_character_
+    },
+    BYTES_OBJETO_R = as.numeric(object.size(values)),
+    BYTES_R_POR_REGISTRO = sby_internal_profile_safe_ratio(
+      as.numeric(object.size(values)),
+      rowCount
+    ),
+    QTD_CARACTERES_NOME_COLUNA = as.numeric(stri_length(columnName)),
+    QTD_BYTES_NOME_COLUNA = as.numeric(stri_numbytes(columnName)),
+    FLAG_COLISAO_NOME_MAIUSCULO = uppercaseCollision,
+    QTD_REGISTROS = as.numeric(rowCount),
+    FLAG_LISTA = is.list(values),
+    SUGESTAO_TIPO_ORACLE = "REVISAR TIPO",
+    ALERTA_TIPO_ORACLE = str_c(
+      "ERRO AO PERFILAR COLUNA: ",
+      conditionMessage(errorCondition)
+    ),
+    FLAG_REVISAR_ANTES_MODELAGEM = TRUE,
+    MOTIVOS_REVISAO_MODELAGEM = "ERRO AO PERFILAR COLUNA"
+  )
+}
+
 sby_internal_profile_numeric <- function(
   values,
   rowCount,
@@ -1490,16 +1536,29 @@ sby_internal_profile_data_catalog <- function(
   profileList <- lapply(
     seq_along(columnNames),
     function(columnPosition){
-      sby_internal_profile_column(
-        values = dataDt[[columnPosition]],
-        columnName = columnNames[[columnPosition]],
-        columnPosition = columnPosition,
-        rowCount = rowCount,
-        uppercaseCollision = uppercaseCollision[[columnPosition]],
-        bitmapCardinalityRatio = bitmapCardinalityRatio,
-        bitmapMinimumRows = bitmapMinimumRows,
-        partitionMinimumRows = partitionMinimumRows,
-        maxRobustSample = maxRobustSample
+      columnValues <- dataDt[[columnPosition]]
+      tryCatch(
+        sby_internal_profile_column(
+          values = columnValues,
+          columnName = columnNames[[columnPosition]],
+          columnPosition = columnPosition,
+          rowCount = rowCount,
+          uppercaseCollision = uppercaseCollision[[columnPosition]],
+          bitmapCardinalityRatio = bitmapCardinalityRatio,
+          bitmapMinimumRows = bitmapMinimumRows,
+          partitionMinimumRows = partitionMinimumRows,
+          maxRobustSample = maxRobustSample
+        ),
+        error = function(errorCondition){
+          sby_internal_profile_failed_column(
+            values = columnValues,
+            columnName = columnNames[[columnPosition]],
+            columnPosition = columnPosition,
+            rowCount = rowCount,
+            uppercaseCollision = uppercaseCollision[[columnPosition]],
+            errorCondition = errorCondition
+          )
+        }
       )
     }
   )
@@ -1508,6 +1567,17 @@ sby_internal_profile_data_catalog <- function(
     use.names = TRUE,
     fill = TRUE
   )
+
+  if(
+    nrow(profileDt) != length(columnNames) ||
+    !identical(profileDt$NOME_COLUNA, columnNames) ||
+    !identical(profileDt$POSICAO_COLUNA, as.numeric(seq_along(columnNames)))
+  ){
+    stop(
+      "Internal error: the profile catalog did not preserve every input column",
+      call. = FALSE
+    )
+  }
 
   as_tibble(profileDt)
 }

@@ -42,9 +42,11 @@
 #' engenharia de banco de dados. O processamento não altera a entrada, usa
 #' operações vetorizadas e limita ao parâmetro `max_robust_sample` apenas a
 #' etapa de medcouple, que é a mais onerosa. As demais métricas exatas continuam
-#' percorrendo os valores selecionados. A execução respeita o contexto de
-#' threads do `sbyops` e restaura a configuração ao terminar, inclusive em caso
-#' de erro.
+#' percorrendo os valores selecionados. Uma falha específica de uma classe de
+#' coluna não elimina essa coluna nem interrompe as seguintes: a linha é mantida,
+#' `SUGESTAO_TIPO_ORACLE` recebe `REVISAR TIPO` e `ALERTA_TIPO_ORACLE` descreve
+#' a falha. A execução respeita o contexto de threads do `sbyops` e restaura a
+#' configuração ao terminar, inclusive em caso de erro.
 #'
 #' @references
 #' Tukey, J. W. (1977). *Exploratory Data Analysis*. Addison-Wesley.
