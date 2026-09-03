@@ -25,11 +25,26 @@
 #' Unicode, espaços, caixa, vazios semânticos e potenciais problemas de
 #' armazenamento.
 #'
+#' `NA` e `NaN` integram a nulidade total, mas também são reportados
+#' separadamente. Infinitos são considerados preenchidos na auditoria de
+#' nulidade e excluídos das estatísticas que exigem valores finitos. Para
+#' `integer64`, a conversão usada nas estatísticas numéricas pode perder precisão
+#' acima de 2^53 e isso é indicado por
+#' `FLAG_ESTATISTICA_INTEGER64_APROXIMADA`. Se nenhuma coluna for selecionada, a
+#' função retorna um tibble sem linhas e sem colunas.
+#'
 #' Os campos relacionados a bitmap, particionamento, compressão, histograma e
-#' índices Oracle são sinais derivados somente dos dados. Eles não substituem
+#' índices Oracle são sinais derivados somente dos dados. A sugestão de tipo
+#' dimensiona texto e precisão inteira pelos valores observados, portanto deve
+#' receber margem de crescimento definida pelo negócio. Tipos não suportados
+#' são marcados como `REVISAR TIPO`. Esses sinais não substituem
 #' workload SQL, seletividade real, estatísticas do otimizador ou validação de
-#' engenharia de banco de dados. O processamento usa `data.table` em cópia
-#' privada e respeita o contexto de threads do `sbyops`.
+#' engenharia de banco de dados. O processamento não altera a entrada, usa
+#' operações vetorizadas e limita ao parâmetro `max_robust_sample` apenas a
+#' etapa de medcouple, que é a mais onerosa. As demais métricas exatas continuam
+#' percorrendo os valores selecionados. A execução respeita o contexto de
+#' threads do `sbyops` e restaura a configuração ao terminar, inclusive em caso
+#' de erro.
 #'
 #' @references
 #' Tukey, J. W. (1977). *Exploratory Data Analysis*. Addison-Wesley.
@@ -51,6 +66,7 @@
 #' @param max_robust_sample Tamanho máximo da amostra determinística usada para
 #' estimar o medcouple.
 #' @param num_treads Inteiro positivo opcional com limite temporário de threads.
+#' O nome é mantido assim por compatibilidade com a API do pacote.
 #'
 #' @return Tibble com uma linha por coluna selecionada. O catálogo pode incluir
 #' os seguintes grupos de cálculos e valores gerados, conforme o tipo da coluna:

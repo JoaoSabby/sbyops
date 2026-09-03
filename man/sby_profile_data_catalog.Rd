@@ -20,7 +20,7 @@ sby_profile_data_catalog(
 \item{bitmap_minimum_rows}{Número mínimo de linhas usado pela regra de triagem para bitmap.}
 \item{partition_minimum_rows}{Número mínimo de linhas usado pela regra de triagem para particionamento por data.}
 \item{max_robust_sample}{Tamanho máximo da amostra determinística usada para estimar o medcouple.}
-\item{num_treads}{Inteiro positivo opcional com limite temporário de threads para a chamada.}
+\item{num_treads}{Inteiro positivo opcional com limite temporário de threads para a chamada. O nome é mantido assim por compatibilidade com a API do pacote.}
 }
 
 \value{
@@ -42,7 +42,9 @@ Constrói um catálogo técnico de variáveis para bases tabulares, combinando m
 \details{
 Cada coluna selecionada é analisada isoladamente. Variáveis numéricas recebem medidas de posição, escala, assimetria, curtose, quantis, detecção de inteiros empíricos, intervalos bayesianos sob modelo normal com prior de Jeffreys e regras robustas de outliers, incluindo boxplot ajustado por medcouple. Variáveis textuais recebem medidas de comprimento, normalização Unicode, espaços, caixa, vazios semânticos e potenciais problemas de armazenamento.
 
-Os campos relacionados a bitmap, particionamento, compressão, histograma e índices Oracle são sinais derivados somente dos dados. Eles não substituem workload SQL, seletividade real, estatísticas do otimizador ou validação de engenharia de banco de dados. O processamento usa \pkg{data.table} em cópia privada e respeita o contexto de threads do \pkg{sbyops}.
+\code{NA} e \code{NaN} integram a nulidade total, mas também são reportados separadamente. Infinitos são considerados preenchidos na auditoria de nulidade e excluídos das estatísticas que exigem valores finitos. Para \code{integer64}, a conversão usada nas estatísticas numéricas pode perder precisão acima de 2^53 e isso é indicado por \code{FLAG_ESTATISTICA_INTEGER64_APROXIMADA}. Se nenhuma coluna for selecionada, a função retorna um tibble sem linhas e sem colunas.
+
+Os campos relacionados a bitmap, particionamento, compressão, histograma e índices Oracle são sinais derivados somente dos dados. A sugestão de tipo dimensiona texto e precisão inteira pelos valores observados, portanto deve receber margem de crescimento definida pelo negócio. Tipos não suportados são marcados como \code{REVISAR TIPO}. Esses sinais não substituem workload SQL, seletividade real, estatísticas do otimizador ou validação de engenharia de banco de dados. O processamento não altera a entrada, usa operações vetorizadas e limita ao parâmetro \code{max_robust_sample} apenas a etapa de medcouple, que é a mais onerosa. As demais métricas exatas continuam percorrendo os valores selecionados. A execução respeita o contexto de threads do \pkg{sbyops} e restaura a configuração ao terminar, inclusive em caso de erro.
 }
 \references{
 Tukey, J. W. (1977). \emph{Exploratory Data Analysis}. Addison-Wesley.
