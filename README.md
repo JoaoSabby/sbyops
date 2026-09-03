@@ -53,6 +53,7 @@ misturar responsabilidades.
 | `sby_profile_data_catalog()` | Cria catálogo por coluna com estatísticas, qualidade e sinais Oracle. |
 | `sby_profile_missing_patterns()` | Lista padrões de nulidade mais frequentes em nível de linha. |
 | `sby_profile_data_relations()` | Mede relações bivariadas, redundância e dependências funcionais. |
+| `sby_dba_create_table()` | Converte o catálogo de perfilamento em um `CREATE TABLE` Oracle identado. |
 
 ### Modelagem auxiliar e diagnóstico robusto
 
@@ -69,6 +70,7 @@ a ferramenta:
 
 - `data.frame`;
 - `tibble`;
+- `data.table`;
 - relações/tabelas DuckDB (materializadas automaticamente como `data.frame`);
 - `matrix`, quando a função documenta suporte matricial.
 
@@ -95,6 +97,9 @@ base_limpa <- dados |>
 catalogo <- sby_profile_data_catalog(base_limpa)
 relacoes <- sby_profile_data_relations(base_limpa, max_rows = 100000L)
 padroes <- sby_profile_missing_patterns(base_limpa)
+
+# Aceita o catálogo como tibble, data.frame ou data.table e não executa o SQL.
+ddl_oracle <- sby_dba_create_table(catalogo, "BASE_LIMPA")
 ```
 
 ## Configuração oficial de threads
@@ -161,7 +166,10 @@ As ferramentas de perfilamento foram desenhadas para auditoria técnica e apoio 
 modelagem. Elas não substituem validação de negócio, análise causal, verificação
 temporal ou avaliação de workload SQL. Em especial, campos de recomendação
 Oracle são **sinais de triagem derivados dos dados**, não comandos físicos a
-serem aplicados automaticamente.
+serem aplicados automaticamente. `sby_dba_create_table()` apenas transforma as
+sugestões de tipo do catálogo em uma string `CREATE TABLE` Oracle; catálogos com
+tipos ausentes ou marcados para revisão são rejeitados, e nenhuma conexão ou
+execução no banco é realizada.
 
 ## Dependências opcionais
 

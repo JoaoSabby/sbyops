@@ -4,29 +4,33 @@
 \alias{sby_dba_create_table}
 \title{Gerar DDL Oracle a partir de um catálogo de dados}
 \usage{
-sby_dba_create_table(.data, table_name)
+sby_dba_create_table(profile_data_catalog, table_name)
 }
 \arguments{
-\item{.data}{Tibble retornado por \code{\link[=sby_profile_data_catalog]{sby_profile_data_catalog()}}.}
+\item{profile_data_catalog}{\code{data.frame}, \code{tibble} ou \code{data.table} retornado por \code{\link[=sby_profile_data_catalog]{sby_profile_data_catalog()}}.}
 
-\item{table_name}{Nome não delimitado da tabela Oracle a criar.}
+\item{table_name}{String única com o nome não delimitado da tabela Oracle a criar. Deve começar com uma letra, conter no máximo 128 bytes e usar somente letras, números, \code{_}, \code{$} ou \code{#}.}
 }
 \value{
-String com a instrução SQL \code{CREATE TABLE}, terminada por ponto e vírgula.
+String escalar, identada em múltiplas linhas, com a instrução SQL \code{CREATE TABLE} e todas as colunas do catálogo, terminada por ponto e vírgula.
 }
 \description{
 Gera uma instrução SQL \code{CREATE TABLE} para Oracle 19c usando os nomes e os
 tipos Oracle produzidos por \code{\link[=sby_profile_data_catalog]{sby_profile_data_catalog()}}.
 }
 \details{
-\code{.data} deve preservar uma linha para cada coluna perfilada e conter os
-campos \code{NOME_COLUNA} e \code{SUGESTAO_TIPO_ORACLE}. Os nomes das colunas são delimitados
+\code{profile_data_catalog} deve ser um \code{data.frame}, \code{tibble} ou \code{data.table},
+preservar uma linha para cada coluna perfilada e conter os campos
+\code{NOME_COLUNA} e \code{SUGESTAO_TIPO_ORACLE}. Os nomes das colunas são delimitados
 com aspas duplas para preservar exatamente os identificadores da tabela de
-origem. O nome da tabela é validado como identificador Oracle não delimitado
-e convertido para maiúsculas.
+origem, inclusive caixa, espaços e aspas internas. O nome da tabela é
+validado como identificador Oracle não delimitado e convertido para
+maiúsculas.
 
-Tipos que requerem revisão manual não geram SQL. A função interrompe a
-execução quando o catálogo contém um tipo ausente ou \code{REVISAR TIPO}.
+A ordem das linhas do catálogo determina a ordem das colunas no SQL. Tipos
+ausentes, vazios, com quebras de linha ou marcados como \code{REVISAR TIPO} não
+geram SQL: nesses casos a função interrompe a execução para não produzir DDL
+incompleto ou inseguro. A função não executa o comando no banco de dados.
 }
 \examples{
 catalogo <- sby_profile_data_catalog(
