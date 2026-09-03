@@ -1487,29 +1487,21 @@ sby_internal_profile_data_catalog <- function(
   uppercaseNames <- str_to_upper(columnNames)
   uppercaseCollision <- duplicated(uppercaseNames) |
     duplicated(uppercaseNames, fromLast = TRUE)
-  profileList <- Map(
-    f = function(
-      values,
-      columnName,
-      columnPosition,
-      collisionFlag
-    ){
+  profileList <- lapply(
+    seq_along(columnNames),
+    function(columnPosition){
       sby_internal_profile_column(
-        values = values,
-        columnName = columnName,
+        values = dataDt[[columnPosition]],
+        columnName = columnNames[[columnPosition]],
         columnPosition = columnPosition,
         rowCount = rowCount,
-        uppercaseCollision = collisionFlag,
+        uppercaseCollision = uppercaseCollision[[columnPosition]],
         bitmapCardinalityRatio = bitmapCardinalityRatio,
         bitmapMinimumRows = bitmapMinimumRows,
         partitionMinimumRows = partitionMinimumRows,
         maxRobustSample = maxRobustSample
       )
-    },
-    values = dataDt,
-    columnName = columnNames,
-    columnPosition = seq_along(columnNames),
-    collisionFlag = uppercaseCollision
+    }
   )
   profileDt <- rbindlist(
     profileList,
