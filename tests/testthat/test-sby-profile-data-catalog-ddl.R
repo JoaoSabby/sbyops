@@ -15,6 +15,44 @@ test_that("sby_profile_data_catalog profiles every input column", {
   expect_true(all(grepl("^[A-Z][A-Z0-9_]*$", names(catalog))))
 })
 
+sbyops_test_broken_column <- function(values){
+  structure(values, class = c("sbyops_test_broken_column", class(values)))
+}
+
+is.na.sbyops_test_broken_column <- function(x){
+  stop("deliberate test failure")
+}
+
+test_that("sby_profile_data_catalog preserves columns when one cannot be profiled", {
+  inputData <- data.frame(
+    before = 1:2,
+    problematic = sbyops_test_broken_column(3:4),
+    after = c(TRUE, FALSE),
+    check.names = FALSE
+  )
+
+  catalog <- sby_profile_data_catalog(inputData)
+
+  expect_identical(nrow(catalog), ncol(inputData))
+  expect_identical(catalog$NOME_COLUNA, names(inputData))
+  expect_identical(catalog$POSICAO_COLUNA, as.numeric(seq_along(inputData)))
+  expect_identical(catalog$SUGESTAO_TIPO_ORACLE[[2L]], "REVISAR TIPO")
+  expect_match(catalog$ALERTA_TIPO_ORACLE[[2L]], "ERRO AO PERFILAR COLUNA")
+  expect_false(is.na(catalog$MEDIA[[1L]]))
+  expect_true(catalog$FLAG_LOGICA[[3L]])
+})
+
+test_that("sby_profile_data_catalog preserves duplicate names and positions", {
+  inputData <- data.frame(first = 1:2, second = 3:4, check.names = FALSE)
+  names(inputData) <- c("duplicada", "duplicada")
+
+  catalog <- sby_profile_data_catalog(inputData)
+
+  expect_identical(nrow(catalog), 2L)
+  expect_identical(catalog$NOME_COLUNA, names(inputData))
+  expect_identical(catalog$POSICAO_COLUNA, c(1, 2))
+})
+
 test_that("sby_dba_create_table builds Oracle DDL from a catalog", {
   catalog <- tibble(
     NOME_COLUNA = c("ID", "DESCRICAO"),
