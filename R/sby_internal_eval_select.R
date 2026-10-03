@@ -63,22 +63,18 @@ sby_internal_eval_select <- function(.data, ..., default = c("all", "numeric")){
 
   # Evaluate user-provided selectors against data columns. External character
   # vectors may be injected with `!!` by callers and can contain bookkeeping
-  # columns that are not present in the current data. In that case, retry with
-  # those injected vectors limited to existing columns while keeping ordinary
-  # tidyselect expressions strict.
-  selection_expression <- rlang::expr(c(!!!selector_expressions))
-  selected_indexes <- tryCatch(
-    tidyselect::eval_select(selection_expression, .data),
-    vctrs_error_subscript_oob = function(error){
-      repaired_selectors <- lapply(
-        selector_expressions,
-        sby_internal_prune_injected_character_selector,
-        column_names = names(.data)
-      )
-      repaired_expression <- rlang::expr(c(!!!repaired_selectors))
-      tidyselect::eval_select(repaired_expression, .data)
-    }
+  # columns that are not present in the current data. Normalize those injected
+  # vectors before the tidyselect call so both positive and negative selections
+  # such as `!!vars` and `-!!vars` keep their tidyselect semantics. Ordinary
+  # tidyselect expressions remain strict because only explicit `!!` character
+  # injections are rewritten.
+  repaired_selectors <- lapply(
+    selector_expressions,
+    sby_internal_prune_injected_character_selector,
+    column_names = names(.data)
   )
+  selection_expression <- rlang::expr(c(!!!repaired_selectors))
+  selected_indexes <- tidyselect::eval_select(selection_expression, .data)
 
   # Return explicit selection indexes for downstream slicing
   return(selected_indexes)
@@ -97,7 +93,8 @@ sby_internal_prune_injected_character_selector <- function(selector, column_name
   selector_expression <- rlang::quo_get_expr(selector)
   repaired_expression <- sby_internal_prune_character_expression(
     selector_expression,
-    column_names = column_names
+    column_names = column_names,
+    selector_env = rlang::quo_get_env(selector)
   )
 
   rlang::quo_set_expr(selector, repaired_expression)
@@ -111,8 +108,10 @@ sby_internal_prune_injected_character_selector <- function(selector, column_name
 #'
 #' @param column_names Existing column names
 #'
+#' @param selector_env Environment where injected variables are resolved
+#'
 #' @return A repaired expression object
-sby_internal_prune_character_expression <- function(expression, column_names){
+sby_internal_prune_character_expression <- function(expression, column_names, selector_env){
   if(is.character(expression)){
     return(intersect(expression, column_names))
   }
@@ -121,16 +120,41 @@ sby_internal_prune_character_expression <- function(expression, column_names){
     return(expression)
   }
 
+  if(sby_internal_is_unquote_expression(expression)){
+    injected_value <- rlang::eval_tidy(expression[[2L]][[2L]], env = selector_env)
+    if(is.character(injected_value)){
+      return(intersect(injected_value, column_names))
+    }
+    return(injected_value)
+  }
+
   repaired_call <- as.list(expression)
   if(length(repaired_call) > 1L){
     repaired_call[-1L] <- lapply(
       repaired_call[-1L],
       sby_internal_prune_character_expression,
-      column_names = column_names
+      column_names = column_names,
+      selector_env = selector_env
     )
   }
 
   as.call(repaired_call)
+}
+
+#' @title Internal Helper: Detect Unquote Expressions
+#'
+#' @description Detect parser-level `!!` calls that remain inside a captured selector
+#'
+#' @param expression A language object
+#'
+#' @return TRUE when expression is a nested `!` call representing `!!`
+sby_internal_is_unquote_expression <- function(expression){
+  is.call(expression) &&
+    identical(expression[[1L]], as.name("!")) &&
+    length(expression) == 2L &&
+    is.call(expression[[2L]]) &&
+    identical(expression[[2L]][[1L]], as.name("!")) &&
+    length(expression[[2L]]) == 2L
 }
 ####
 ## End
